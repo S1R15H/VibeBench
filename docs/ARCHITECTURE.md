@@ -1,164 +1,280 @@
 
-# System Architecture
+# System Architecture (Research Version)
 
 ## High-Level Overview
-The software uses a **Controller-Agent** pattern with a layered architecture supporting real-time analysis, historical tracking, and multi-dimensional quality evaluation. The "Controller" (GUI/API) directs specific "Agents" (Runners) to process code snippets through modular analysis pipeline.
+VibeBench is a simple, reproducible benchmarking framework that runs on a single machine (laptop/lab server). The architecture prioritizes clarity, ease of understanding, and reproducibility over scalability.
+
+**Design Philosophy:** 
+- Simple > Complex
+- Transparent > Black box
+- Reproducible > Optimized
+- Research-friendly > Enterprise-ready
 
 ## Components
 
-### 1. The Frontend (GUI & Dashboard)
-* **Tech:** 
-  * Primary: Python `PyQt6` for desktop UI
-  * Secondary: React/Vue.js for real-time web dashboard
+### 1. The Frontend (GUI)
+* **Tech:** Python `PyQt6` (lightweight, single executable)
 * **Responsibility:** 
-  * User input, task selection, AI model selection
-  * Real-time progress monitoring with WebSocket streaming
-  * Result visualization (comparative charts, trend graphs)
-  * Historical data browsing and filtering
+  * User task selection (A-H dropdown)
+  * AI model selection (Copilot, GPT-4, Claude, Gemini)
+  * "Run Benchmark" button
+  * Progress display (current task, AI model)
+  * Results summary panel (pass/fail, issue counts)
+  * Export button (CSV, JSON)
 
-### 2. The Orchestrator (Backend Logic & Pipeline Manager)
-* **Core Pipeline:**
-    1.  Receives source code string + language + task ID + AI model metadata
-    2.  Saves code to temporary file with metadata tracking
-    3.  Triggers the **Compiler/Interpreter** with timeout enforcement
-    4.  Triggers the **Test Runner** (injects input data, checks output, measures performance)
-    5.  Triggers the **Security Scanner Suite** (parallel execution)
-    6.  Triggers the **Compliance Analyzer** (OWASP, regulatory checks)
-    7.  Aggregates results into JSON object and stores in time-series database
-    8.  Streams results via WebSocket to real-time dashboard
+### 2. The Core Orchestrator (Backend)
+* **Single-threaded pipeline** (simplicity over performance):
+    1. User clicks "Run Benchmark"
+    2. For each AI model:
+       - Fetch code (API call or manual input)
+       - Save to temporary file
+       - Compile/run it
+       - Check results
+       - Scan for security issues
+       - Store results
+    3. Display summary
 
-* **Error Recovery:**
-    * Timeout handlers (configurable per task/language)
-    * Memory limit enforcement with OOM detection
-    * Hanging process termination with cleanup
-    * Graceful degradation for partial analysis failures
+* **Error handling:** 
+    * Timeout: 60 seconds per task
+    * Memory limit: Simple subprocess limits
+    * Failed task: Log error, continue with next model
 
-### 3. The Sandbox Layer (Docker Orchestration)
-* **Ephemeral Container Strategy:** Each code execution in isolated, resource-limited container
-* **Image A (Python Base):** Python 3.10+, Pandas, MySQL/MongoDB connectors, Bandit (security)
-* **Image B (Web Base):** Node.js, PHP, Apache, ESLint, npm audit
-* **Image C (Compiled Languages):** GCC, Java, CppCheck, SonarQube scanner
-* **Resource Limits:** CPU limits (1-2 cores), memory limits (512MB-1GB), disk quotas, network isolation
-* **Network Policy:** No external outbound; all I/O through mounts; database access via localhost bridge
+### 3. The Sandbox Layer (Docker - Optional)
+* **Why Docker?** Safe execution without harming host machine
+* **Simple setup:** One Dockerfile with Python + Node.js + PHP
+* **Single image:** No complex multi-image strategy
+* **Execution:** Each code sample runs in fresh container, then deleted
 
-### 4. The Database Layer
-* **Primary DB: SQLite** (for framework data and experiment metadata)
-  * Schema: `Experiments` table (ID, Timestamp, AI_Name, Model_Version, Task_ID, Language, Code_Snippet, Compile_Status, Functional_Correctness, Warning_Count, Security_Vulnerabilities, Performance_Metrics)
-  
-* **Time-Series DB: InfluxDB/Prometheus** (for historical trend tracking)
-  * Stores aggregated metrics per model/task/language for fast time-series queries
-  * Enables trend analysis and model improvement tracking over weeks/months
-  * Supports distributed writes for horizontal scaling
+**Simple Dockerfile:**
+```dockerfile
+FROM ubuntu:22.04
+RUN apt-get update && apt-get install -y \
+    python3 python3-pip \
+    nodejs npm \
+    php \
+    mysql-client \
+    git
+RUN pip install bandit pymongo mysql-connector-python
+COPY run_code.py /app/
+WORKDIR /app
+```
 
-* **Search Index: Elasticsearch** (optional for large-scale deployments)
-  * Full-text search of generated code snippets and findings
-  * Aggregation queries for compliance reporting
+### 4. The Database (SQLite - Single File)
+* **Tech:** `SQLite` (no setup needed, single .db file)
+* **Schema - Simple Experiments Table:**
+  ```
+  experiments
+  ├─ id (primary key)
+  ├─ timestamp (when run)
+  ├─ ai_model (Copilot, GPT-4, Claude, Gemini)
+  ├─ task_id (A-H)
+  ├─ language (python, javascript, etc)
+  ├─ code (generated code snippet)
+  ├─ compile_status (success/failure)
+  ├─ compilation_errors (text)
+  ├─ functional_correctness (0-1 score)
+  ├─ security_issues (count)
+  ├─ security_details (JSON)
+  ├─ execution_time_ms (integer)
+  ├─ memory_used_mb (integer)
+  └─ notes (any observations)
+  ```
 
-### 5. Security Scanner Suite (Modular)
-* **Python:** Bandit (security vulnerabilities), Pylint (code quality)
-* **JavaScript/Node.js:** ESLint, npm audit, OWASP Dependency Check
-* **PHP:** PHPStan, PHPCS, npm audit (if using packages)
-* **C/C++:** CppCheck, Flawfinder, Address Sanitizer (ASan)
-* **Java:** SpotBugs, FindBugs, OWASP Dependency Check
-* **Generic:** SonarQube integration for cross-language analysis
+### 5. Security Scanner (Simple Integration)
+* **Python:** Bandit (already available, single command)
+* **JavaScript:** npm audit (built-in)
+* **PHP:** PHPStan (installed in Docker)
+* **Processing:** Parse output → Extract issues → Store in DB
 
-* **Output Processing:** Regex parsers to extract severity, line numbers, vulnerability types from each tool's output
+**Simple approach:**
+```python
+# For each code file
+result = subprocess.run(['bandit', file], capture_output=True)
+issues = parse_bandit_output(result.stdout)
+store_in_database(issues)
+```
 
-### 6. Compliance & Regulatory Analysis Module (Tier 2+)
-* **OWASP Mapping:** Classify findings against OWASP Top 10 categories
-* **CVE Database Integration:** Match detected vulnerabilities to known CVE records
-* **Compliance Checkers:** SOC2, HIPAA, PCI-DSS alignment verification
-* **Report Generator:** Audit-grade PDF/HTML reports with executive summaries
+### 6. Cost Tracking (Simple CSV)
+* **No complex billing system**
+* **Simple tracking:**
+  ```csv
+  timestamp, ai_model, tokens_input, tokens_output, cost_usd
+  2024-02-16T10:30:00, gpt-4, 150, 300, 0.0095
+  ```
+* **Analysis:** Load CSV into pandas, calculate averages
 
-### 7. Cost Tracking & ROI Analysis Module (Tier 2+)
-* **API Usage Logging:** Track API calls, tokens, costs per model
-* **Cost Aggregation:** Calculate $/query, $/successful_output, cost per quality point
-* **TCO Calculator:** Include infrastructure, developer overhead, API costs
-* **ROI Dashboard:** Visualize cost-effectiveness and quality/cost tradeoffs
+### 7. Historical Trend Analysis (CSV/JSON)
+* **Data storage:** Export results as CSV after each run
+* **Analysis:** Python script (matplotlib/seaborn) for trend visualization
+* **No real-time dashboard:** Static reports good enough for research
 
-### 8. Historical Trend Database
-* **Schema:** Time-indexed metrics storing daily/weekly aggregates for each AI model
-* **Metrics:** Average compilation success rate, security issue counts, performance benchmarks, code quality scores
-* **Retention:** Indefinite with optional archival to cold storage
-* **Privacy Levels:** Private (organization only), Shared (with approved partners), Public (anonymized research)
+**Trend report example:**
+```
+gpt-4 Improvement Over Time:
+- Week 1: 85% compilation success
+- Week 2: 88% compilation success
+- Week 3: 90% compilation success
+→ Shows clear improvement trend
+```
 
-## Data Flow Architecture
+## Data Flow Architecture (Simplified)
 
 ```
 ┌─────────────────────┐
-│   User/API Input    │
-│ (Code + Task + AI)  │
+│   User Selects      │
+│  Task + AI Model    │
 └──────────┬──────────┘
            │
            ▼
     ┌──────────────┐
-    │ Orchestrator │◄──── Metadata enrichment
-    │ (Pipeline)   │      (timestamps, versions)
+    │ Orchestrator │
+    │  (Python)    │
     └──────┬───────┘
            │
-    ┌──────┴──────────────────────┬─────────────────┐
-    ▼                             ▼                 ▼
-┌────────────┐         ┌──────────────────┐  ┌─────────────┐
-│   Docker   │         │ Security Scanner │  │ Compliance  │
-│  Sandbox   │         │  Suite (Parallel)│  │  Analyzer   │
-│ (Execute)  │         └──────────────────┘  └─────────────┘
-└──────┬─────┘                   │                   │
-       │                         └────────┬──────────┘
-       │                                  │
-       └──────────────┬───────────────────┘
-                      ▼
-            ┌─────────────────────┐
-            │  Result Aggregator  │
-            │   (JSON Builder)    │
-            └──────┬──────────────┘
-                   │
-        ┌──────────┴──────────┐
-        ▼                     ▼
-   ┌─────────┐        ┌──────────────┐
-   │ SQLite  │        │ InfluxDB/    │
-   │ (Meta)  │        │ Prometheus   │
-   └─────────┘        │ (Time-series)│
-        │             └──────┬───────┘
-        │                    │
-        └────────┬───────────┘
-                 ▼
-     ┌─────────────────────────┐
-     │  WebSocket Stream to    │
-     │  Real-Time Dashboard    │
-     └─────────────────────────┘
+    ┌──────┴──────────┬─────────────┐
+    ▼                 ▼             ▼
+┌────────────┐  ┌────────────┐  ┌──────────┐
+│   Docker   │  │ Bandit/    │  │ Database │
+│  Sandbox   │  │ npm audit  │  │ (SQLite) │
+│(Execute)   │  │(Scan)      │  │(Store)   │
+└────────────┘  └────────────┘  └──────────┘
+    │                 │             │
+    └─────────────────┴─────────────┘
+              │
+              ▼
+     ┌──────────────────┐
+     │ Results Report   │
+     │ (CSV/JSON/PDF)   │
+     └──────────────────┘
 ```
 
-## Flow of Data (Detailed Example)
+## Technology Stack (Research-Friendly)
 
-1. **Input:** User selects "Task B (JSON Threads)", "Model: GPT-4", "Language: Python"
-2. **Orchestrator:**
-   - Stores in temporary file: `temp_task_b_gpt4_20260216_143022.py`
-   - Records metadata: timestamp, model version (GPT-4 Turbo 2024-11), language, task_id
-3. **Parallel Processing:**
-   - *Compiler:* Docker Python container runs file; captures stdout, stderr, exit code
-   - *Tester:* Injects sample JSON data, verifies output matches expected format, measures execution time
-   - *Security:* Runs Bandit on code, parses results (vulnerability count, severity levels)
-   - *Compliance:* Checks for hardcoded secrets, unsafe patterns, OWASP violations
-4. **Aggregation:**
-   - Builds result JSON: `{compile_status: "success", functional_correctness: 0.95, security_issues: 2, exec_time_ms: 145, vulnerabilities: [{type: "hardcoded_secret", severity: "high", line: 23}]}`
-5. **Storage:**
-   - SQLite: Stores full record for historical reference
-   - InfluxDB: Stores aggregated metrics for trend analysis
-   - WebSocket: Streams result to dashboard in real-time
-6. **Output:** Dashboard updates with new data point; historical trend chart reflects new benchmark
+| Component | Technology | Why |
+|-----------|-----------|-----|
+| Language | Python 3.10+ | Easy to read, widely used in research |
+| GUI | PyQt6 | Simple, no build step needed |
+| Database | SQLite | Zero setup, single file, portable |
+| Code Execution | Docker | Safe, reproducible, isolated |
+| Security Scanning | Bandit, npm audit | Free, well-known, easy to parse |
+| Analysis | pandas, matplotlib | Standard for data analysis |
+| Version Control | Git + GitHub | Transparent, public code |
+| Testing | pytest | Simple unit tests for verifying tasks |
 
-## Scalability Considerations
+## Execution Flow (End-to-End Example)
 
-**Current (MVP):** Single-machine execution, SQLite local storage, WebSocket to local dashboard
+**Scenario:** Student runs Task B (Multi-threaded JSON) on GPT-4
 
-**Phase 2 (Distributed):** 
-- Kubernetes orchestration for Docker sandboxes
-- InfluxDB cloud cluster for time-series data
-- Elasticsearch for searchable code/findings
-- API gateway for distributed client connections
+1. **GUI:** Student selects Task B, GPT-4 from dropdowns, clicks "Run"
+2. **Fetch Code:** 
+   - Call OpenAI API with standard prompt for Task B
+   - Receive: Python code with threading
+   - Save to: `/tmp/task_b_gpt4_20240216_143022.py`
+3. **Execute:**
+   - Docker container: `docker run --rm -v /tmp/task_b_gpt4_20240216_143022.py:/code/task.py vibebench python /code/task.py`
+   - Input: Sample JSON with 5 records, expect sorted output
+   - Output: Verify output matches expected format
+4. **Security Scan:**
+   - `bandit /tmp/task_b_gpt4_20240216_143022.py`
+   - Parse output: 3 issues (hardcoded path, no input validation, missing lock)
+5. **Store Result:**
+   - SQL INSERT: timestamp, model, task, code, success, issues_count, issues_json
+6. **Display:**
+   - GUI shows: "✓ Task B passed (3 security warnings)"
+   - User can view generated code, issues, execution time
 
-**Phase 3+ (Enterprise SaaS):**
-- Multi-tenant isolation
-- Database replication across regions
-- CDN for dashboard delivery
-- Advanced RBAC for compliance auditing
+## Key Design Decisions
+
+**Single Machine (Laptop/Lab Server)**
+- No cloud infrastructure needed
+- All code runs locally
+- Easy to debug and understand
+- Cost: $0 (use existing hardware)
+
+**SQLite Database**
+- No separate database server needed
+- Single file, easy to backup (`cp experiments.db experiments.db.backup`)
+- Easy to export as CSV for analysis
+- Query complexity: Simple SELECT/INSERT, no complex joins
+
+**Synchronous Execution**
+- Run one benchmark at a time (not parallel)
+- Simpler to understand and debug
+- Takes longer but no race conditions
+- Good for research (reproducibility > speed)
+
+**Docker Optional**
+- Can run without Docker for quick testing (use subprocess)
+- Docker for final benchmarks (safety, consistency)
+- Easy to swap: `docker run` vs `subprocess.run()`
+
+**Manual API Input Option**
+- For Copilot (not easily accessible via API)
+- Student manually runs prompt in Copilot UI
+- Pastes generated code into VibeBench
+- No fancy API automation needed
+
+**CSV Export for Analysis**
+- Export results from SQLite to CSV
+- Use standard tools (Excel, Python, R) for analysis
+- No custom dashboards needed
+- Transparent: Anyone can analyze the data
+
+## Deployment on Lab Server
+
+**Minimal Setup (< 30 minutes):**
+```bash
+# On lab server (Ubuntu 22.04)
+git clone https://github.com/S1R15H/VibeBench.git
+cd VibeBench
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Optional: Setup Docker for safe execution
+docker build -t vibebench .
+
+# Run the GUI
+python src/gui.py
+
+# Or run from command line
+python src/cli.py --model gpt-4 --task B --language python
+```
+
+**No complex infrastructure:**
+- ❌ Kubernetes
+- ❌ Multiple databases
+- ❌ Load balancing
+- ❌ Multi-region replication
+- ✅ Just Python + Docker + SQLite
+
+## Reproducibility
+
+**For other researchers to reproduce results:**
+1. Download VibeBench code from GitHub
+2. Setup same Docker image (Dockerfile included)
+3. Use same test data (`test_data/` folder)
+4. Run same prompts (documented in PROMPTS.md)
+5. Get same results (or close, given model non-determinism)
+
+**Reproducibility documentation:**
+- Exact Python version used: `3.10.12`
+- Exact model versions: `gpt-4-turbo-2024-04-09`, etc.
+- Exact test data: Versioned in git
+- Random seeds: Fixed for deterministic runs where applicable
+- Timestamp: Every benchmark run is timestamped
+
+## What's NOT in This Architecture
+
+**Deliberately omitted for simplicity:**
+- ❌ Real-time WebSocket dashboard (CSV reports sufficient)
+- ❌ Multi-region deployment (single lab server)
+- ❌ Advanced time-series database (SQLite is fine)
+- ❌ Elasticsearch indexing (not needed for 1000s of records)
+- ❌ Auto-scaling (manual upscaling via bigger server if needed)
+- ❌ Microservices (monolithic = simpler)
+- ❌ API gateway (direct script/GUI calls)
+- ❌ Distributed job queue (sequential execution)
+
+This keeps the codebase small (~2000 lines Python), understandable, and easy for students to modify for their research.
+

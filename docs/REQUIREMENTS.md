@@ -28,100 +28,86 @@ Your software should: (1) provide GUI to choose the software coding task; (2) cr
 
 Note: static analysis tool such as "Coverity" can be used to scan the generated source code for security vulnerabilities and help with the code evaluation. Using your results, choose the best AI-based Coding Assistant tool for each programming task listed above.
 
-## Extended Requirements: Market Differentiation Features
+## Research-Focused Extended Requirements
 
-To establish VibeBench as the independent, enterprise-grade AI coding assistant evaluator, the framework must support the following advanced capabilities:
+### Core Research Objectives
 
-### Tier 1: Core Differentiators (MVP Phase)
+VibeBench is designed as a research framework to evaluate and compare AI-based coding assistants across standardized programming tasks. The project aims to:
 
-**1. Real-Time Benchmarking Dashboard**
-- Live web-based dashboard showing comparative metrics as tests execute
-- WebSocket-based streaming of results with 0-5 second latency
-- Multi-AI comparison charts (quality, performance, security trends)
-- Test progress indicators and estimated completion times
+1. **Produce publishable research findings** on comparative capabilities of AI coding assistants
+2. **Establish reproducible benchmarking methodology** for code generation quality evaluation
+3. **Create open-source reference implementation** for academic community
+4. **Generate datasets** for further research on LLM code generation
 
-**2. Historical Trend Analysis & Model Evolution Tracking**
-- Time-series database (InfluxDB/Prometheus) storing all benchmark results
-- Visualization of how AI models improve over time (e.g., Copilot v1 → v2, GPT-3.5 → GPT-4)
-- Model version/date pinning for reproducibility and historical comparison
-- Longitudinal data on model improvement trajectories per task
+### Key Features for Research Impact
 
-**3. Security Vulnerability Categorization & OWASP Alignment**
-- Deep vulnerability analysis beyond pass/fail counts
-- OWASP Top 10 classification of detected vulnerabilities
-- CVE database integration for known vulnerability matching
-- Severity scoring (critical, high, medium, low)
-- Remediation suggestion generation
+**1. Comprehensive Quality Metrics**
+- Compilation/execution success rates
+- Functional correctness verification
+- Security vulnerability detection (OWASP Top 10 mapping)
+- Code readability and maintainability analysis
+- Performance profiling (execution time, memory usage)
 
-**4. CI/CD Integration Plugins**
-- GitHub Actions workflow for automated benchmarking on commits
-- Pre-commit hooks to evaluate code suggestions
-- GitLab CI pipeline integration
-- Jenkins plugin for enterprise CI/CD systems
-- Automated issue creation for security findings
+**2. Historical Trend Analysis**
+- Track how model capabilities improve over time
+- Compare versions: GPT-3.5 → GPT-4, Copilot v1 → v2
+- Document findings for conference/journal publications
+- Store model versions and dates for reproducibility
 
-### Tier 2: Premium Features (Phase 2)
+**3. Security Analysis (Research-Grade)**
+- Categorize vulnerabilities by type (CWE, OWASP)
+- Quantify security patterns in AI-generated code
+- Publish findings: "Common security mistakes in AI code generation"
+- Create vulnerability dataset for ML community
 
-**5. Cost-Effectiveness Analysis Module**
-- API cost tracking per model ($/query, $/token)
-- Quality ROI metrics (best quality per dollar spent)
-- TCO analysis including infrastructure and developer overhead
-- Cost comparison matrix across AI assistants
-- Budget forecasting for different usage patterns
+**4. Cost-Effectiveness Study**
+- Track API costs per model
+- Analyze quality vs. cost tradeoffs
+- Publish: "Cost-effectiveness of AI coding assistants" (research paper)
+- Dataset: Open cost benchmarks for reproducibility
 
-**6. Compliance & Audit Reporting**
-- SOC2 Type II compliance report generation
-- HIPAA, PCI-DSS, and other regulated industry standard alignment checks
-- Automated audit trail of all benchmark runs
-- Compliance-grade documentation of security findings
-- Export formats suitable for regulatory submission
+**5. Simple Results Repository**
+- GitHub-based storage of benchmark results
+- CSV/JSON exports for meta-analysis
+- Public dataset for other researchers to analyze
+- Transparency: All prompts and generated code available
 
-**7. Language-Specific Deep-Dive Suites**
-- Rust-specific benchmarks (memory safety, ownership patterns)
-- Go-specific challenges (goroutines, channel concurrency)
-- TypeScript evaluation (type safety metrics, inference quality)
-- Polyglot project analysis (Python + JS + SQL in single test)
+### Non-Requirements (Out of Scope for Research)
 
-**8. Fine-Tuning Feedback Loop**
-- Prompt engineering recommendation engine based on VibeBench results
-- Domain-specific prompt optimization for organization's unique workflows
-- Capability to create custom model personas for specialized tasks
-- Transfer learning framework for improving AIs on specific problem domains
+**What we're NOT building:**
+- ❌ Enterprise CI/CD pipelines (focus on core research, not deployment)
+- ❌ Multi-tenant SaaS platform (research publication > product)
+- ❌ Compliance reporting (regulatory focus, not research)
+- ❌ Advanced ML models for predictions (stick to descriptive analysis)
+- ❌ Custom task engines (focus on standard 8 tasks)
+- ❌ Fine-tuning LLMs (research project, not ML engineering)
+- ❌ Real-time dashboards (static reports sufficient)
+- ❌ Multiple cloud regions (run on single lab server)
 
-### Tier 3: Enterprise & Research Features (Phase 3+)
+## Research Positioning
 
-**9. Predictive Switching Recommendations**
-- ML model trained on VibeBench data: "If you switch from Copilot to Claude, here's what will improve/regress"
-- Scenario analysis for different coding task distributions
-- ROI projections for AI tool migration decisions
+**Research Goal:**
+VibeBench produces the first comprehensive, independent, reproducible evaluation of AI-based coding assistants across standardized programming tasks. The framework is designed for academic research and will be published with open-source code and publicly available datasets.
 
-**10. Custom Task Definition Engine**
-- Framework supporting user-defined coding tasks beyond the standard 8
-- Parametrizable test harnesses and verification criteria
-- Community-contributed benchmark suites
+**Target Audience:**
+- Computer Science researchers studying LLM code generation
+- ML/AI conferences and journals (ICML, NeurIPS, ACL, FSE, ICSE)
+- Student researchers evaluating AI tools
+- Open-source community studying AI capabilities and limitations
 
-**11. White-Label SaaS Offering**
-- Multi-tenant cloud deployment of VibeBench
-- Custom branding and reporting for enterprises
-- API access for third-party tool integration
+**Research Contributions:**
+1. Standardized benchmarking methodology for code generation
+2. Comparative evaluation dataset (public, reproducible)
+3. Analysis of security vulnerabilities in AI-generated code
+4. Documentation of model evolution over time
+5. Cost-effectiveness analysis of different AI models
+6. Methodology and code available for others to extend
 
-## Market Positioning
-
-**Unique Value Proposition:**
-VibeBench is the only independent, continuous, enterprise-grade benchmarking framework for comparing AI-based coding assistants across standardized programming tasks with comprehensive quality metrics. Unlike vendor-specific benchmarks, VibeBench provides objective, reproducible results with focus on real-world code quality outcomes (security, performance, maintainability) rather than just accuracy metrics.
-
-**Addressable Markets:**
-1. Development teams evaluating AI tools for adoption
-2. Enterprise security and compliance teams auditing AI-generated code
-3. Academic research on LLM code generation capabilities
-4. Developer tool platforms (IDE vendors, CI/CD providers) integrating quality metrics
-5. Cost-conscious organizations optimizing AI tool spending
-
-**Competitive Advantages:**
-- Multi-model comparison (unlike single-vendor benchmarks)
-- Security-centric analysis (vs. general code quality tools)
-- Cost-effectiveness tracking (vs. feature-only comparisons)
-- Reproducible, versioned test suites (vs. ad-hoc evaluations)
-- CI/CD workflow integration (vs. standalone tools)
+**Publication Venues:**
+- IEEE Transactions on Software Engineering (TSE)
+- ACM Transactions on Software Engineering and Methodology (TOSEM)
+- Empirical Software Engineering conference (EMSE)
+- Mining Software Repositories (MSR) conference
+- International Conference on Software Engineering (ICSE)
 
  

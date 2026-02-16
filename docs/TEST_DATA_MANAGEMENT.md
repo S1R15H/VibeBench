@@ -1,7 +1,7 @@
-# Test Data Management & Reproducibility Strategy
+# Test Data Management (Research Version)
 
 ## Overview
-VibeBench requires standardized, versioned test data across all benchmark runs to ensure reproducibility and valid comparisons across AI models. This document specifies the test case structure, sample data management, database seeding procedures, and reproducibility guardrails.
+VibeBench uses simple, standardized test data for the 8 programming tasks. The focus is on reproducibility and clarity, not complex versioning systems.
 
 ## Test Case Structure
 
@@ -322,240 +322,68 @@ db.products.insertMany([
 
 ---
 
-## Test Data Versioning
+## Test Data Tracking
 
-### Version Control Strategy
-```
-test_data/
-├── versions/
-│   ├── v1.0/
-│   │   ├── task_a/
-│   │   ├── task_b/
-│   │   └── ...
-│   ├── v1.1/
-│   │   └── ...
-│   └── v2.0/
-│       └── ...
-├── current/ -> v2.0/  # Symlink to current version
-└── manifest.json
-```
+All test data is tracked in Git at `test_data/`. This ensures reproducibility—any benchmark run can be traced to exact test data via Git commit hash.
 
-**Manifest file** (`test_data/manifest.json`):
-```json
-{
-  "version": "2.0",
-  "created_date": "2024-02-16",
-  "description": "Test data v2.0 with enhanced edge cases",
-  "changes_from_v1": [
-    "Task B: Added larger dataset (5 -> 10 records)",
-    "Task H: Added HTML injection test case",
-    "Task E: Added unicode filename test"
-  ],
-  "checksums": {
-    "task_a": "sha256:abc123...",
-    "task_b": "sha256:def456...",
-    "task_c": "sha256:ghi789...",
-    "task_d": "sha256:jkl012...",
-    "task_e": "sha256:mno345...",
-    "task_f": "sha256:pqr678...",
-    "task_g": "sha256:stu901...",
-    "task_h": "sha256:vwx234..."
-  }
-}
-```
-
-### Backward Compatibility
-- Maintain at least 2 previous versions
-- Document breaking changes
-- Provide migration guide for old benchmarks
+**No versioning system needed:** Since this is a student research project with a single 12-week timeline, all benchmark runs use the same test data version. If tasks change mid-project, simply commit the update and document when the change occurred in the research paper.
 
 ---
 
-## Database Seeding Procedures
+## Setting Up Databases (Optional)
 
-### Automated Setup Script
-```python
-# test_data/setup_databases.py
-import subprocess
-import json
-import time
+For Tasks F and G, you need MySQL and MongoDB running locally. 
 
-def setup_mysql():
-    """Initialize MySQL test database"""
-    sql_script = open('test_data/task_f/schema.sql').read()
-    
-    result = subprocess.run([
-        'mysql', '-h', 'localhost', '-u', 'root', '-p${MYSQL_ROOT_PASSWORD}'
-    ], input=sql_script, capture_output=True)
-    
-    assert result.returncode == 0, "MySQL setup failed"
-    print("✓ MySQL database initialized")
-
-def setup_mongodb():
-    """Initialize MongoDB test database"""
-    from pymongo import MongoClient
-    
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client['vibebench_test']
-    
-    # Drop existing collections
-    db.products.drop()
-    
-    # Insert test data
-    data = json.load(open('test_data/task_g/seed_data.json'))
-    db.products.insert_many(data)
-    
-    print("✓ MongoDB database initialized")
-
-def verify_setup():
-    """Verify all databases are accessible"""
-    # MySQL check
-    result = subprocess.run(['mysql', '-u', 'vibebench_user', 
-                            '-p${VIBEBENCH_DB_PASSWORD}', 
-                            'vibebench_test', '-e', 'SELECT COUNT(*) FROM employees'],
-                           capture_output=True)
-    assert result.returncode == 0
-    
-    # MongoDB check
-    from pymongo import MongoClient
-    client = MongoClient('mongodb://localhost:27017/')
-    assert client['vibebench_test'].products.count_documents({}) == 5
-    
-    print("✓ All databases verified")
-
-if __name__ == '__main__':
-    setup_mysql()
-    setup_mongodb()
-    verify_setup()
-```
-
-### Docker Compose Setup
-```yaml
-# test_data/docker-compose.yml
-version: '3.8'
-services:
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: vibebench_test
-      MYSQL_USER: vibebench_user
-      MYSQL_PASSWORD: vibebench_test_pwd
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./test_data/task_f/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  mongodb:
-    image: mongo:6.0
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./test_data/task_g/seed_data.json:/seed/seed_data.json
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-```
-
----
-
-## Reproducibility Guardrails
-
-### Deterministic Execution
-1. **Fixed Random Seeds:** If any task uses randomization, seed with constant
-2. **Timezone Neutrality:** Use UTC for all timestamps, never local time
-3. **Floating-Point Precision:** Round to 2 decimal places for monetary values
-4. **File Permissions:** Ensure consistent umask (0o644 for files, 0o755 for dirs)
-
-### Timing Considerations
-- Task execution times vary by system load; store ranges not exact values
-- Example: `execution_time_ms: {"min": 100, "max": 200, "expected": 150}`
-
-### Environmental Variables
+**Easiest approach:** Use Docker
 ```bash
-# These must be set identically across all benchmark runs
-export VIBEBENCH_TEST_VERSION=2.0
-export VIBEBENCH_SEED=42
-export VIBEBENCH_TIMEZONE=UTC
-export VIBEBENCH_FLOAT_PRECISION=2
-export LANG=C.UTF-8
-export LC_ALL=C.UTF-8
+docker run -d --name mysql -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mysql:8.0
+docker run -d --name mongodb -p 27017:27017 mongo:6.0
 ```
 
-### Pre-Run Validation Checklist
-```python
-def pre_run_validation():
-    checks = [
-        ("Test data version matches manifest", check_test_data_version),
-        ("All databases are seeded", check_database_seeding),
-        ("Required files exist", check_required_files),
-        ("File checksums valid", check_file_integrity),
-        ("Environment variables set", check_env_variables),
-        ("Docker containers ready", check_docker_health),
-        ("No stale processes", check_stale_processes),
-    ]
-    
-    for check_name, check_fn in checks:
-        try:
-            check_fn()
-            print(f"✓ {check_name}")
-        except AssertionError as e:
-            print(f"✗ {check_name}: {e}")
-            raise
+Then run the setup script to seed with test data:
+```bash
+python test_data/setup_databases.py
 ```
+
+**Alternative:** If Docker unavailable, install MySQL and MongoDB locally on your laptop/lab server, then run the same setup script.
 
 ---
 
-## Test Data Maintenance
+## Ensuring Reproducibility
 
-### Updating Test Data (Versioning Process)
-1. Create new version directory: `test_data/versions/v2.1/`
-2. Update test data files with new/improved test cases
-3. Update `manifest.json` with version and checksums
-4. Update `current/` symlink
-5. Commit with descriptive message: `chore: bump test data to v2.1 - add edge case for unicode filenames`
-6. Announce deprecation of old version (60-day support window)
+1. **Git Commit:** Before running benchmarks, commit all test data and note the Git commit hash
+2. **Environment:** Set these before each benchmark run:
+   ```bash
+   export VIBEBENCH_SEED=42
+   export VIBEBENCH_TIMEZONE=UTC
+   ```
+3. **Record Details:** In your results CSV, log:
+   - Test data Git commit hash
+   - Python version
+   - System (laptop/server name)
+   - Date/time
+4. **Report:** When publishing results, state: "All benchmarks used test data from commit X, with environment Y, on date Z"
 
-### Archival & Long-Term Storage
-- Old test data versions archived to cold storage after 1 year
-- Full dataset backups taken monthly
-- S3/GCS bucket for offsite archival with versioning enabled
+This simple approach is sufficient for research—readers can checkout the exact test data and reproduce your results.
 
 ---
 
-## Test Execution Validation
+## Maintaining Test Data
 
-### Benchmark Run Report
-```json
-{
-  "benchmark_id": "bench_20240216_143022",
-  "test_data_version": "2.0",
-  "timestamp": "2024-02-16T14:30:22Z",
-  "environment": {
-    "python_version": "3.11.8",
-    "docker_version": "24.0.6",
-    "os": "Ubuntu 22.04",
-    "timezone": "UTC"
-  },
-  "results": [
-    {
-      "task_id": "A",
-      "ai_model": "gpt-4-turbo",
-      "status": "passed",
-      "test_data_checksum": "abc123...",
-      "output_matches_expected": true
-    },
-    ...
-  ],
-  "reproducibility_score": "99.5%"
-}
+- **Keep test data in Git:** `test_data/` directory tracked with code
+- **Document changes:** If you modify tasks mid-project, commit with message: "chore: update task A test data (more edge cases)"
+- **Avoid deletion:** Never delete old test data; if running multiple rounds of benchmarks, document which commit hash was used for each round in your results log
+- **Backup:** Git automatically backs up your test data; no additional versioning system needed for a research project
+
+## Example Benchmark Run
+
+When you run benchmarks and collect results, your results CSV should look like:
+
+```csv
+model,task,attempt,status,result,timestamp,test_data_commit,python_version
+gpt-4-turbo,A,1,pass,correct,2024-02-16T10:30:00Z,a1b2c3d,3.11.8
+gpt-4-turbo,B,1,pass,correct,2024-02-16T10:32:15Z,a1b2c3d,3.11.8
+claude-3-sonnet,A,1,pass,correct,2024-02-16T10:35:22Z,a1b2c3d,3.11.8
 ```
 
-This ensures every benchmark run is traceable and reproducible.
+This allows anyone reading your paper to see exactly which test data and Python version were used.

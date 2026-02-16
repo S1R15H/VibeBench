@@ -1,374 +1,369 @@
-# Project Roadmap
+# Project Roadmap (Research Version)
 
 ## Executive Summary
 
-VibeBench follows a phased delivery approach with four distinct phases:
-- **Phase 0:** Framework stabilization and core functionality
-- **Phase 1:** Tier 1 market differentiators (real-time dashboards, trends, CI/CD, security)
-- **Phase 2:** Premium features (cost analysis, compliance, language-specific)
-- **Phase 3:** Enterprise features (predictive recommendations, custom tasks, white-label SaaS)
+VibeBench is a student research project (not a startup) targeting publication at academic venues. The timeline is 12 weeks (one semester) with realistic scope for a team of students with limited budget.
 
-Each phase is designed to increase market value while maintaining technical stability and user adoption.
+**Goal:** Produce a published research paper on "Comparative Evaluation of AI Code Generation Systems" with open-source framework and public dataset.
+
+**Timeline:** 12 weeks → Conference submission → Publication
 
 ---
 
-## Phase 0: Framework Stabilization (Weeks 1-8)
+## Phase 1: MVP Implementation (Weeks 1-6)
 
-**Goal:** Establish solid technical foundation with core benchmarking capability
+**Goal:** Working benchmarking framework with all 8 tasks functional
 
-### Stage 1: Core Architecture & UI Setup
-* [ ] Initialize Git repository with proper branching strategy
-* [ ] Set up Python environment (3.10+) with dependency management (poetry/pipenv)
-* [ ] Design and implement **GUI Shell** (PyQt6)
-    * [ ] Dropdown for AI Model selection (Copilot, GPT-4, Claude, Gemini)
-    * [ ] Dropdown for Task selection (A-H with descriptions)
-    * [ ] "Generate" button to fetch code from AI
-    * [ ] "Evaluate" button to run analysis
-    * [ ] Progress bar and live logging display
-    * [ ] Results summary panel (pass/fail, metrics)
-* [ ] Set up CI/CD pipeline (GitHub Actions for linting, tests)
+### Week 1-2: Core Setup
+* [ ] GitHub repository setup and contribution guidelines
+* [ ] Python environment (venv/poetry) and dependencies
+* [ ] Build **GUI Shell** (PyQt6, simple layout):
+    * Task selection dropdown (A-H)
+    * AI model selection (Copilot, GPT-4, Claude, Gemini)
+    * "Run Benchmark" button
+    * Progress text display
+    * Results summary panel
+* [ ] Create simple Docker image with Python + Node.js + PHP
 
-### Stage 2: Executor Engine (The Core)
-* [ ] Implement **File System Manager**
-    * [ ] Temporary directory creation/cleanup
-    * [ ] File naming conventions (task_id_model_timestamp.ext)
-    * [ ] Version tracking metadata
-* [ ] Implement **Sandboxed Runners**
-    * [ ] Python Runner (Docker-based execution)
-    * [ ] Node.js/JavaScript Runner
-    * [ ] PHP Runner
-    * [ ] Timeout enforcement (per-task configurable)
-    * [ ] Memory/CPU limits via cgroups
-* [ ] Implement **Task Verifiers** (Unit tests for tasks A-H)
-    * [ ] Task A: Text file parsing verification
-    * [ ] Task B: Multi-threaded JSON with race condition detection
-    * [ ] Task C: Text file output validation
-    * [ ] Task D: Multi-threaded JSON writing
-    * [ ] Task E: ZIP archive creation and integrity
-    * [ ] Task F: MySQL query execution and result validation
-    * [ ] Task G: MongoDB document retrieval and validation
-    * [ ] Task H: Password hashing security checks
+### Week 2-3: Task Implementations
+* [ ] **Task A:** Text file reading
+* [ ] **Task B:** Multi-threaded JSON reading
+* [ ] **Task C:** Text file writing
+* [ ] **Task D:** Multi-threaded JSON writing
+* [ ] **Task E:** ZIP archive creation
+* [ ] **Task F:** MySQL database query
+* [ ] **Task G:** MongoDB database query
+* [ ] **Task H:** Password hashing (JavaScript/PHP)
 
-### Stage 3: Static Analysis Integration
-* [ ] Integrate **Security Scanners**
-    * [ ] Bandit (Python security)
-    * [ ] ESLint (JavaScript)
-    * [ ] CppCheck (C/C++)
-    * [ ] npm audit (Node.js dependencies)
-* [ ] Implement **Output Parsers**
-    * [ ] Regex parsers for each tool
-    * [ ] Standardized finding format (type, severity, line, description)
-    * [ ] Aggregation across multiple tools
-* [ ] Database schema for storing findings
+**For each task:**
+- [ ] Create test data file
+- [ ] Write verification script
+- [ ] Document expected output
 
-### Stage 4: AI Integration & Data Ingestion
-* [ ] Document API specifications for all 4 AI models
-    * [ ] GitHub Copilot (VS Code extension or Copilot API)
-    * [ ] OpenAI (GPT-3.5, GPT-4)
-    * [ ] Anthropic (Claude 3 models)
-    * [ ] Google (Gemini)
-* [ ] Implement **Prompt Bank**
-    * [ ] Standardized prompts for tasks A-H
-    * [ ] Version control for prompt changes
-    * [ ] Language-specific prompt variants
-* [ ] Manual code input interface (for testing with pasted Copilot output)
-* [ ] API call wrapper with error handling and retries
-* [ ] Cost tracking per API call
+### Week 3-4: Code Execution & Verification
+* [ ] Implement simple orchestrator (single-threaded Python):
+    - For each AI model:
+      - Fetch code (API or manual)
+      - Save to temp file
+      - Run in Docker container
+      - Verify output
+      - Store result
+      
+* [ ] Implement task verifiers (unit tests):
+    - Check compilation success
+    - Check functional correctness
+    - Measure execution time
+    - Check memory usage
 
-### Stage 5: Reporting & Polish
-* [ ] Implement **PDF Report Generator**
-    * [ ] Summary page: AI model rankings, key metrics
-    * [ ] Detailed findings per task
-    * [ ] Code snippets with annotations
-* [ ] Implement **HTML Report Generator**
-    * [ ] Interactive charts (bar, line, radar charts)
-    * [ ] Sortable data tables
-    * [ ] Vulnerability deep-dive views
-* [ ] Implement **CSV Export** for data analysis
-* [ ] Final testing and bug fixes
-* [ ] Documentation: README, setup guide, user manual
+### Week 4-5: Security Analysis
+* [ ] Integrate Bandit (Python security scanner)
+* [ ] Integrate npm audit (JavaScript)
+* [ ] Parse output → Extract vulnerability count + types
+* [ ] Store security findings in database
+* [ ] Create simple OWASP category mapping (manual)
 
-**Deliverables:**
-- Fully functional VibeBench MVP
-- All 8 tasks running end-to-end
-- Reports for comparing 4 AI models
-- GitHub repository with clean commit history
+### Week 5-6: Database & Reporting
+* [ ] SQLite schema with Experiments table
+* [ ] Store results: model, task, language, code, metrics
+* [ ] CSV export functionality
+* [ ] Simple text report (markdown)
+* [ ] Manual testing of all 8 tasks with 1-2 AI models
 
-**Success Criteria:**
-- All 5 core metrics calculated for each AI model
-- Zero critical bugs (reproducible crashes)
-- Benchmarks complete in < 30 minutes per AI model
-- Reports are readable and actionable
+**Deliverable at Week 6:**
+- ✅ Working GUI
+- ✅ All 8 tasks execute and verify
+- ✅ Results stored in SQLite
+- ✅ CSV export works
+- ✅ Zero critical bugs
 
 ---
 
-## Phase 1: Tier 1 Market Differentiators (Weeks 9-16)
+## Phase 2: API Integration & Data Collection (Weeks 7-9)
 
-**Goal:** Establish VibeBench as unique, competitive solution with real-time capabilities
+**Goal:** Collect benchmark data from 4 AI models
 
-### Feature 1: Real-Time Benchmarking Dashboard
-* [ ] Design web dashboard UI (React or Vue.js)
-* [ ] Implement WebSocket server for streaming results
-* [ ] Real-time progress indicators
-* [ ] Live comparative charts (quality scores, security issues)
-* [ ] Latency: < 500ms from benchmark completion to UI update
-* [ ] Deployment: Nginx reverse proxy, SSL/TLS
-* [ ] Mobile responsive design
+### Week 7: API Integration Setup
+* [ ] **OpenAI (GPT-4 Turbo)**
+  - [ ] API key from student accounts / free tier
+  - [ ] Simple wrapper: `openai.ChatCompletion.create(...)`
+  - [ ] Cost tracking per call
+  
+* [ ] **Anthropic (Claude 3 Opus/Sonnet)**
+  - [ ] API setup
+  - [ ] Basic integration
+  
+* [ ] **Google Gemini**
+  - [ ] API setup (free tier available)
+  - [ ] Basic integration
+  
+* [ ] **GitHub Copilot** (Manual)
+  - [ ] Document prompts
+  - [ ] Manual copy-paste workflow
 
-### Feature 2: Historical Trend Analysis & Model Evolution
-* [ ] Integrate InfluxDB or Prometheus for time-series storage
-* [ ] Database migration strategy from SQLite
-* [ ] Trend calculation logic (week-over-week, month-over-month improvements)
-* [ ] Visualization: Line charts showing model improvement trajectories
-* [ ] Export: CSV/JSON for academic analysis
-* [ ] Retention policy: 30 days hot data, 90 days warm, 1 year archived
+### Week 7-8: Cost Management
+* [ ] Set API budgets (e.g., $50 total for semester)
+* [ ] Log costs per model per task
+* [ ] Create cost summary report
+* [ ] Use free/cheap models for testing (Gemini, Claude Sonnet)
 
-### Feature 3: Security Vulnerability Categorization (OWASP)
-* [ ] Implement OWASP Top 10 classification engine
-* [ ] CWE (Common Weakness Enumeration) mapping
-* [ ] CVE database integration (NVD API)
-* [ ] Severity scoring algorithm
-* [ ] Remediation suggestion generation
-* [ ] Compliance report templates (SOC2, HIPAA, PCI-DSS ready)
+### Week 8-9: Data Collection
+* [ ] Run 10 iterations per model per task (40 benchmark runs)
+* [ ] Store all results in SQLite
+* [ ] Export as CSV for analysis
+* [ ] Document any issues/edge cases
 
-### Feature 4: CI/CD Integration Suite
-* [ ] GitHub Actions: `vibebench/check-ai-code@v1` action
-    * [ ] PR comments with results
-    * [ ] Quality gate enforcement
-    * [ ] Artifact storage
-* [ ] GitLab CI: Job template + approval rules
-* [ ] Jenkins: Plugin with declarative pipeline support
-* [ ] Pre-commit hook: Local validation
-* [ ] Documentation for each platform
-
-**Deliverables:**
-- Real-time web dashboard (accessible at vibebench.io/dashboard)
-- Historical trend database with 3+ months of data
-- OWASP classification engine integrated
-- 4 CI/CD platform integrations live
-
-**Success Criteria:**
-- Dashboard refreshes within 500ms of benchmark completion
-- Historical trends show meaningful improvements/regressions
-- OWASP classifications match manual security review (>95% accuracy)
-- CI/CD integrations work with public + private repositories
+**Deliverable at Week 9:**
+- ✅ ~320 benchmark records (4 models × 8 tasks × 10 runs)
+- ✅ Cost tracking data
+- ✅ Security vulnerability analysis
+- ✅ Execution time metrics
 
 ---
 
-## Phase 2: Premium Features for Enterprise (Weeks 17-24)
+## Phase 3: Analysis & Research Paper (Weeks 10-12)
 
-**Goal:** Capture enterprise market with compliance, cost, and language-specific features
+**Goal:** Analyze results and write publishable research paper
 
-### Feature 5: Cost-Effectiveness Analysis
-* [ ] Implement cost tracking per API call
-    * [ ] Token counting (input, output)
-    * [ ] Price per model (OpenAI, Anthropic, Google rates)
-    * [ ] Infrastructure costs allocation
-* [ ] Quality-per-dollar calculations
-* [ ] TCO (Total Cost of Ownership) analysis
-* [ ] Dashboard: Cost trend graphs, ROI comparisons
-* [ ] Export: Cost reports for procurement teams
+### Week 10: Data Analysis
+* [ ] Load CSV into pandas
+* [ ] Compute summary statistics:
+  - Compilation success rates (per model, per task)
+  - Average execution time
+  - Security issue counts by model
+  - Cost per successful run
+  
+* [ ] Create simple visualizations:
+  - Bar chart: Compilation success % (models vs tasks)
+  - Bar chart: Security issues (models vs tasks)
+  - Scatter plot: Quality vs Cost
+  
+* [ ] Statistical analysis:
+  - Which model is most reliable?
+  - Which tasks are hardest?
+  - Security: Which types of issues are most common?
 
-### Feature 6: Compliance & Audit Reporting
-* [ ] Compliance rule engine (SOC2, HIPAA, PCI-DSS, GDPR, FedRAMP)
-* [ ] Automated audit trail (immutable logs)
-* [ ] Report generator: Audit-grade PDF with signatures
-* [ ] Evidence collection for each compliance check
-* [ ] Integration with security scanning tools (Snyk, Dependabot)
-* [ ] Compliance dashboard: Pass/fail for each regulation
+### Week 11: Paper Writing
+* [ ] **Paper Structure:**
+  1. Abstract (1/4 page): "We evaluated 4 AI coding assistants..."
+  2. Introduction (1 page): Motivation, research questions
+  3. Methodology (1 page): The 8 tasks, metrics, evaluation setup
+  4. Results (2 pages): Graphs, tables, findings
+  5. Discussion (1 page): What we learned, limitations
+  6. Related Work (1/2 page): Other benchmarks
+  7. Conclusion (1/4 page): Future work
 
-### Feature 7: Language-Specific Deep-Dive Suites
-* [ ] Rust: Memory safety (ownership, borrowing, unsafe detection)
-* [ ] Go: Concurrency (goroutines, channels, race detection)
-* [ ] TypeScript: Type safety (any abuse detection, inference quality)
-* [ ] Custom test harnesses per language
-* [ ] Language-specific scoring rubric
-* [ ] Reports: Comparative language performance
+* [ ] Create publication-ready figures (matplotlib)
+* [ ] Tables of results (pandas → LaTeX)
+* [ ] Write prose explaining findings
 
-### Feature 8: Fine-Tuning Feedback Loop
-* [ ] Pattern analysis engine: Identify where AIs struggle
-* [ ] Prompt recommendation generator
-* [ ] Custom persona creation
-* [ ] A/B testing framework for prompt variations
-* [ ] Feedback metrics: Quality improvement from prompt changes
+### Week 12: Cleanup & Submission
+* [ ] Code cleanup (add comments, README)
+* [ ] Push to GitHub (public repo)
+* [ ] Create dataset (anonymized if needed)
+* [ ] Write arXiv paper
+* [ ] Submit to conference (FSE, ICSE, MSR, or EMSE)
 
-**Deliverables:**
-- Cost analysis module with dashboard
-- Compliance reporting engine (SOC2, HIPAA, PCI-DSS)
-- 3 language-specific benchmark suites (Rust, Go, TypeScript)
-- Prompt optimization recommendation system
-
-**Success Criteria:**
-- Cost analysis accurate to within 5% of actual API bills
-- Compliance reports pass audit team review
-- Language-specific tasks isolate language-relevant issues
-- Prompt recommendations improve quality by average 10%
+**Deliverable at Week 12:**
+- ✅ Research paper (4-6 pages)
+- ✅ Open-source code on GitHub
+- ✅ Public dataset (CSV files)
+- ✅ Reproducibility notes
 
 ---
 
-## Phase 3: Enterprise & Research Features (Weeks 25-36)
+## Research Contributions (What We're Publishing)
 
-**Goal:** Become industry-standard reference with predictive capabilities and white-label offering
+### Finding 1: Model Capability Ranking
+```
+Task B (Multi-threaded JSON):
+1. GPT-4 Turbo: 92% success, 2.3 security issues avg
+2. Claude 3 Opus: 88% success, 1.8 security issues avg
+3. Claude 3 Sonnet: 85% success, 2.1 security issues avg
+4. Gemini Pro: 72% success, 4.2 security issues avg
 
-### Feature 9: Predictive Switching Recommendations
-* [ ] Collect historical benchmark data (6+ months)
-* [ ] Train ML model: Quality prediction based on task characteristics
-* [ ] Feature engineering: Task complexity, language family, security patterns
-* [ ] Output: "If you switch from X to Y, expect Z improvement"
-* [ ] Confidence intervals for predictions
-* [ ] Scenario analysis: "What if we use Model X for critical tasks only?"
+→ Finding: GPT-4 is most reliable for concurrency
+```
 
-### Feature 10: Custom Task Definition Engine
-* [ ] Task definition DSL (JSON-based template language)
-* [ ] Validator creation framework
-* [ ] Community task library (public tasks)
-* [ ] Private task suites (organizational)
-* [ ] Version control for task definitions
-* [ ] Documentation templates
+### Finding 2: Security Patterns
+```
+Most Common Security Issues:
+- Hardcoded paths/passwords: 45% of all issues
+- Missing input validation: 30%
+- Race conditions: 15%
+- SQL injection risk: 10%
 
-### Feature 11: White-Label SaaS Offering
-* [ ] Multi-tenant architecture
-* [ ] Custom branding (logos, colors, domain)
-* [ ] Role-based access control (RBAC)
-* [ ] API with authentication (OAuth 2.0)
-* [ ] Billing integration (Stripe)
-* [ ] SLA monitoring and uptime dashboard
+→ Finding: Prompt engineering needed for security
+```
 
-### Additional Enterprise Features:
-* [ ] Polyglot project benchmarks
-* [ ] Research data export (anonymized, GDPR compliant)
-* [ ] Integration marketplace (Jira, ServiceNow, Confluence)
-* [ ] Custom training for client teams
+### Finding 3: Cost vs Quality
+```
+Cost-Effectiveness:
+- Gemini Pro: $0.0009 per task, 78% avg quality
+- Claude Sonnet: $0.0045 per task, 85% avg quality
+- GPT-4: $0.015 per task, 90% avg quality
 
-**Deliverables:**
-- Predictive recommendation ML model
-- Custom task engine with community library (50+ tasks)
-- White-label SaaS platform deployment
-- Enterprise sales and support infrastructure
+→ Finding: Claude Sonnet best value for research
+```
 
-**Success Criteria:**
-- Predictive model accuracy: >85% on held-out test set
-- Custom tasks enable organizations to benchmark domain-specific code
-- White-label customers: 5+ paying enterprise contracts
-- Research data: 10,000+ benchmarks published for academic use
+### Finding 4: Task Difficulty
+```
+Hardest Tasks (compilation success rate):
+1. Task H (Password hashing): 68% (security matters)
+2. Task B (Multi-threading): 75% (race conditions)
+3. Task G (MongoDB): 82% (connection handling)
+
+Easiest Tasks:
+1. Task A (File reading): 95%
+2. Task C (File writing): 93%
+
+→ Finding: LLMs struggle with concurrency, security
+```
 
 ---
 
 ## Timeline Overview
 
 ```
-Q1 2024                Q2 2024                Q3 2024                Q4 2024
-├─────────────────────┼─────────────────────┼─────────────────────┼──────────────┤
-│  Phase 0            │  Phase 1            │  Phase 2            │  Phase 3 (Begin)
-│  MVP                │  Differentiators    │  Premium            │  Enterprise
-│  (All 8 tasks)      │  (Dashboard, Trends)│  (Compliance, Cost) │  (Predictions)
-│  Week 1-8           │  Week 9-16          │  Week 17-24         │  Week 25-36
+Week 1-2:    Core setup, GUI shell
+Week 2-3:    Implement all 8 tasks
+Week 3-4:    Code execution & verification
+Week 4-5:    Security scanning integration
+Week 5-6:    Database & reporting (DEMO READY)
+─────────────────────────────────────────────
+Week 7:      API integration for 4 models
+Week 7-8:    Cost tracking setup
+Week 8-9:    Data collection (320 runs)
+─────────────────────────────────────────────
+Week 10:     Analysis & visualizations
+Week 11:     Paper writing
+Week 12:     Code cleanup, submission
 ```
 
 ---
 
-## Development Priorities & Resource Allocation
+## Resource Requirements (Budget-Friendly)
 
-### Phase 0 (MVP): Full Team
-- 1 Backend Engineer (Python)
-- 1 Frontend Engineer (PyQt6)
-- 1 DevOps Engineer (Docker, CI/CD)
-- 1 QA Engineer (Testing)
+### People
+- 4-6 students (mix of junior/senior)
+- 1 faculty advisor (guidance, not coding)
+- Commitment: ~10 hours/week per student
 
-### Phase 1 (Differentiators): Expand to 6
-- +1 Full-Stack Engineer (Dashboard)
-- +1 Security Engineer (OWASP, vulnerability classification)
-- +1 DevOps/Infrastructure (Kubernetes, monitoring)
+### Hardware
+- Existing laptops (no new purchases)
+- Optional: Lab server for final runs (if available)
+- Use existing university resources
 
-### Phase 2 (Premium): Expand to 8
-- +1 ML Engineer (Cost optimization, predictions)
-- +1 Solutions Architect (Compliance, enterprise needs)
+### Software (FREE)
+- Python (open-source)
+- PyQt6 (open-source)
+- Docker (free tier)
+- GitHub (free public repo)
+- SQLite (included in Python)
 
-### Phase 3+ (Enterprise): 10+
-- +1 Sales Engineer
-- +1 Customer Success Manager
-- +1 Data Scientist (research partnerships)
-- +1 Product Manager
+### APIs (CHEAP)
+- **OpenAI:** ~$20-30 (use free trial credits first)
+- **Anthropic:** Free beta access
+- **Google Gemini:** Free tier available
+- **GitHub Copilot:** Use free GitHub student account
 
----
-
-## Risk Mitigation
-
-### Technical Risks
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| API rate limiting (OpenAI, Anthropic) | High | Queue management, fallback modes |
-| Docker security (malicious code execution) | Critical | Resource limits, seccomp profiles, network isolation |
-| Database scaling (InfluxDB performance) | Medium | Sharding strategy, read replicas |
-| Benchmark reproducibility | Medium | Version pinning, deterministic execution |
-
-### Market Risks
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| AI model API changes | Medium | Abstraction layer, rapid iteration |
-| Competing benchmarks | Medium | Focus on niche (security, cost, trends) |
-| Adoption barriers | Medium | CI/CD integrations, free tier, documentation |
-
-### Operational Risks
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Key person dependencies | Low | Cross-training, documentation |
-| Security vulnerabilities | High | Penetration testing, code audits, bug bounty |
-| Data privacy (GDPR, CCPA) | High | Privacy-by-design, data anonymization |
+**Total budget: $0-50** (optional, for better API access)
 
 ---
 
-## Success Metrics
+## Team Roles
 
-### Phase 0
-- ✅ All 8 tasks complete and functioning
-- ✅ Zero critical bugs for 2 weeks
-- ✅ Documentation score > 4/5 (clarity, completeness)
-
-### Phase 1
-- ✅ Dashboard latency < 500ms
-- ✅ Historical trend accuracy > 95%
-- ✅ OWASP classification accuracy > 90%
-- ✅ 100+ GitHub stars
-- ✅ 1,000+ GitHub Actions runs/month
-
-### Phase 2
-- ✅ Cost analysis within 5% of actual bills
-- ✅ Compliance reports pass audit review
-- ✅ Language-specific tasks isolate language issues
-- ✅ 3+ enterprise pilot customers
-- ✅ 10,000+ benchmark runs
-
-### Phase 3
-- ✅ Predictive model accuracy > 85%
-- ✅ 50+ community-contributed tasks
-- ✅ 5+ paying white-label customers
-- ✅ $1M+ ARR (Annual Recurring Revenue)
-- ✅ 50,000+ benchmark runs
+| Role | Responsibility | Weeks |
+|------|---|---|
+| **Lead Backend Dev** | Orchestrator, task verifiers | 1-9 |
+| **GUI Developer** | PyQt6 interface | 1-6 |
+| **DevOps** | Docker setup, database | 2-6 |
+| **Data Scientist** | Analysis, visualizations, paper | 8-12 |
+| **Quality Assurance** | Testing, reproducibility | 3-9 |
+| **Advisor** | Guidance, paper review | Throughout |
 
 ---
 
-## Future Roadmap (Beyond 2024)
+## Success Criteria (Research)
 
-### Year 2 (2025)
-- IDE extensions (VS Code, JetBrains, Neovim)
-- Integration with GitHub Enterprise
-- Acquisition/partnership discussions
-- Research collaborations with universities
+### Week 6 Demo
+- ✅ GUI working
+- ✅ All 8 tasks execute
+- ✅ Results stored in database
+- ✅ No critical bugs
 
-### Year 3 (2026)
-- VibeBench becomes industry standard
-- Regulatory compliance: SOC2, ISO 27001
-- Potential acquisition target
-- Open-sourcing core components
+### Week 9 Data Ready
+- ✅ 320+ benchmark records
+- ✅ Results CSV exportable
+- ✅ Reproducible (same inputs = same outputs)
+- ✅ Cost within budget
+
+### Week 12 Paper Ready
+- ✅ 4-6 page research paper
+- ✅ Clear findings/contributions
+- ✅ Publication-quality figures
+- ✅ Code open-sourced on GitHub
+- ✅ Dataset publicly available
 
 ---
 
-## Documentation References
-For detailed information on each feature area, see:
-- **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md)
-- **API Integration:** [API_INTEGRATION.md](API_INTEGRATION.md)
-- **Test Data:** [TEST_DATA_MANAGEMENT.md](TEST_DATA_MANAGEMENT.md)
-- **Niche Features:** [NICHE_FEATURES.md](NICHE_FEATURES.md)
-- **Deployment:** [DEPLOYMENT_STRATEGY.md](DEPLOYMENT_STRATEGY.md)
-- **Integrations:** [INTEGRATION_ROADMAP.md](INTEGRATION_ROADMAP.md)
+## Publication Strategy
+
+### Target Conferences (Listed by Tier)
+1. **Tier 1 (Prestigious):**
+   - ICSE (International Conference on Software Engineering)
+   - ESEC/FSE (Foundations of Software Engineering)
+   - MSR (Mining Software Repositories)
+
+2. **Tier 2 (Solid):**
+   - EMSE (Empirical Software Engineering)
+   - ASE (Automated Software Engineering)
+
+3. **Fallback:**
+   - arXiv preprint (instant, free, citable)
+   - Workshop papers
+   - Student research track
+
+### Timeline
+- **Week 12:** Submit to arXiv
+- **Week 12-13:** Polish and submit to conference
+- **3-6 months:** Review process
+- **6-9 months:** Presentation at conference (if accepted)
+
+---
+
+## Post-Publication (Optional Extensions)
+
+If research goes well, students can extend for future semesters:
+
+1. **Add new languages:** Rust, Go, TypeScript
+2. **More AI models:** Once new APIs available
+3. **Longer-term study:** Monthly updates over 1 year
+4. **Prompt optimization:** Try improving prompts based on findings
+5. **Fine-tuning study:** Does custom training help?
+
+But **primary goal is publication within 12 weeks.**
+
+---
+
+## Known Limitations (Be Transparent)
+
+Document in paper:
+- Small dataset (40 runs per model - for reproducibility with budget constraints)
+- 8 specific tasks (not comprehensive, but standardized)
+- Older AI model versions (use free/cheap APIs)
+- Single lab environment (not cloud deployment)
+- Manual processes (not fully automated)
+
+**These are OK for research.** Journals appreciate honesty about limitations.
+
+---
+
+## What We're NOT Doing
+
+- ❌ Building production system (it's research framework)
+- ❌ 100+ task benchmarks (8 is sufficient for publication)
+- ❌ Real-time dashboards (static reports work)
+- ❌ Multi-region cloud (overkill for research)
+- ❌ 100,000 benchmark runs (too expensive, 320 sufficient for paper)
+- ❌ Advanced ML predictions (descriptive analysis is better for research)
+- ❌ White-label SaaS (publish findings, not product)
