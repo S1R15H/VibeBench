@@ -16,13 +16,14 @@ VibeBench is a student research project (not a startup) targeting publication at
 
 ### Week 1-2: Core Setup
 * [ ] GitHub repository setup and contribution guidelines
-* [ ] Python environment (venv/poetry) and dependencies
-* [ ] Build **GUI Shell** (PyQt6, simple layout):
+* [ ] Python environment (venv/poetry) and dependencies for backend
+* [ ] Build **GUI (Frontend)** (Next.js, modern layout):
     * Task selection dropdown (A-H)
     * AI model selection (Copilot, GPT-4, Claude, Gemini)
     * "Run Benchmark" button
     * Progress text display
     * Results summary panel
+* [ ] Build **API (Backend)** (FastAPI) to connect frontend with orchestrator
 * [ ] Create simple Docker image with Python + Node.js + PHP
 
 ### Week 2-3: Task Implementations
@@ -55,18 +56,24 @@ VibeBench is a student research project (not a startup) targeting publication at
     - Measure execution time
     - Check memory usage
 
-### Week 4-5: Security Analysis
-* [ ] Integrate Bandit (Python security scanner)
-* [ ] Integrate npm audit (JavaScript)
-* [ ] Parse output → Extract vulnerability count + types
-* [ ] Store security findings in database
-* [ ] Create simple OWASP category mapping (manual)
+### Week 4-5: Security & Readability Analysis
+* [ ] Integrate Bandit (Python security scanner — Factor 3)
+* [ ] Integrate npm audit / ESLint security plugin (JavaScript/PHP)
+* [ ] Parse output → Extract vulnerability type, severity, line number
+* [ ] Map each finding to a plain-English mitigation suggestion (Factor 3: "proposed mitigation mechanisms")
+* [ ] Store security findings + mitigations in database
+* [ ] Integrate Radon for cyclomatic complexity (Factor 4: documentation & readability)
+* [ ] Compute comment density: comment lines / total lines (Factor 4)
+* [ ] Capture `stderr` for compilation warnings — separate from errors (Requirement 2.3)
+* [ ] Store `compilation_warnings` field in SQLite
 
 ### Week 5-6: Database & Reporting
-* [ ] SQLite schema with Experiments table
-* [ ] Store results: model, task, language, code, metrics
+* [ ] SQLite schema with all required fields:
+  - `language_supported`, `compile_status`, `compilation_errors`, `compilation_warnings`
+  - `functional_correctness`, `security_issues`, `security_mitigations`
+  - `readability_score`, `comment_density`, `execution_time_ms`, `memory_used_mb`
 * [ ] CSV export functionality
-* [ ] Simple text report (markdown)
+* [ ] Simple text report (markdown) including per-run warnings and mitigations
 * [ ] Manual testing of all 8 tasks with 1-2 AI models
 
 **Deliverable at Week 6:**
@@ -126,21 +133,23 @@ VibeBench is a student research project (not a startup) targeting publication at
 
 ### Week 10: Data Analysis
 * [ ] Load CSV into pandas
-* [ ] Compute summary statistics:
-  - Compilation success rates (per model, per task)
-  - Average execution time
-  - Security issue counts by model
-  - Cost per successful run
+* [ ] Compute summary statistics across all **5 evaluation factors**:
+  - **Factor 1:** Language support rate (% of tasks where AI generated valid code per language)
+  - **Factor 2:** Compilation success rates + warning rates (per model, per task)
+  - **Factor 3:** Security issue counts by model + most common vulnerability types
+  - **Factor 4:** Average readability score (cyclomatic complexity + comment density) per model
+  - **Factor 5:** Average execution time and memory usage per model
   
-* [ ] Create simple visualizations:
-  - Bar chart: Compilation success % (models vs tasks)
-  - Bar chart: Security issues (models vs tasks)
+* [ ] Create visualizations:
+  - Bar chart: Compilation success + warning % (models vs tasks)
+  - Bar chart: Security issues per model, by vulnerability type
+  - Bar chart: Average readability score per model
   - Scatter plot: Quality vs Cost
   
-* [ ] Statistical analysis:
-  - Which model is most reliable?
-  - Which tasks are hardest?
-  - Security: Which types of issues are most common?
+* [ ] **Produce "Best AI Per Task" ranking table** (final required output):
+  - For each task A–H: which model ranked best on compilation, security, readability, performance?
+  - Overall winner per task (weighted score across all 5 factors)
+  - Example: "For Task H (auth), Claude is best overall due to lowest security issues and strongest password hashing"
 
 ### Week 11: Paper Writing
 * [ ] **Paper Structure:**
@@ -166,7 +175,8 @@ VibeBench is a student research project (not a startup) targeting publication at
 **Deliverable at Week 12:**
 - ✅ Research paper (4-6 pages)
 - ✅ Open-source code on GitHub
-- ✅ Public dataset (CSV files)
+- ✅ Public dataset (CSV files with all 5 factors)
+- ✅ **Best AI Per Task summary table** (answers the core requirement)
 - ✅ Reproducibility notes
 
 ---
@@ -255,7 +265,7 @@ Week 12:     Code cleanup, submission
 
 ### Software (FREE)
 - Python (open-source)
-- PyQt6 (open-source)
+- Next.js / Node.js (open-source)
 - Docker (free tier)
 - GitHub (free public repo)
 - SQLite (included in Python)
@@ -275,7 +285,7 @@ Week 12:     Code cleanup, submission
 | Role | Responsibility | Weeks |
 |------|---|---|
 | **Lead Backend Dev** | Orchestrator, task verifiers | 1-9 |
-| **GUI Developer** | PyQt6 interface | 1-6 |
+| **GUI Developer** | Next.js interface | 1-6 |
 | **DevOps** | Docker setup, database | 2-6 |
 | **Data Scientist** | Analysis, visualizations, paper | 8-12 |
 | **Quality Assurance** | Testing, reproducibility | 3-9 |

@@ -27,11 +27,14 @@ Charlie,ORD003,75.25,2024-01-17
 ```
 
 **Verification Criteria:**
-- File parsed successfully (no exceptions)
+- Language supported: AI produced a `.py` file for Python (Factor 1)
+- File parsed successfully (no exceptions) — Req 2.1
+- Compilation warnings captured from stderr — Req 2.3
 - Correct number of records extracted (3)
 - Numerical calculations accurate (sum = 425.75)
 - Date parsing correct
-- Output format matches JSON schema
+- Output format matches JSON schema — Req 2.2
+- Readability: cyclomatic complexity ≤ 5; comment density ≥ 0.10 — Factor 4
 
 ---
 
@@ -73,11 +76,14 @@ Charlie,ORD003,75.25,2024-01-17
 ```
 
 **Verification Criteria:**
-- All records processed exactly once (no duplicates, no skipped)
+- Language supported: AI produced a valid file for the requested language (Factor 1)
+- All records processed exactly once (no duplicates, no skipped) — Req 2.2
 - Correct aggregation across threads
 - Actual thread count >= requested threads
-- No race conditions detected (verify via inspection/profiling)
+- No race conditions detected (verify via inspection/profiling) — Factor 2
+- Compilation warnings captured from stderr — Req 2.3
 - Output matches expected schema
+- Readability: cyclomatic complexity checked; comment density logged — Factor 4
 
 ---
 
@@ -107,11 +113,14 @@ Total: 150000
 ```
 
 **Verification Criteria:**
-- File created successfully
-- All data written correctly
+- Language supported: AI produced a valid text output file (Factor 1)
+- File created successfully — Req 2.1
+- Compilation warnings captured from stderr — Req 2.3
+- All data written correctly — Req 2.2
 - Formatting matches expected output exactly
 - File is readable and valid UTF-8
 - File permissions set correctly (readable by framework)
+- Readability: comment density and cyclomatic complexity logged — Factor 4
 
 ---
 
@@ -140,11 +149,14 @@ Total: 150000
 ```
 
 **Verification Criteria:**
-- JSON file is valid and parseable
+- Language supported: AI produced a valid JSON-writing file (Factor 1)
+- JSON file is valid and parseable — Req 2.1 / 2.2
 - All records written exactly once
 - Correct data type for each field
 - Thread IDs properly recorded (if applicable)
+- Compilation warnings captured from stderr — Req 2.3
 - File size > 0 and < 100KB (reasonable bounds)
+- Readability: cyclomatic complexity and comment density logged — Factor 4
 
 ---
 
@@ -161,12 +173,15 @@ For testing purposes only.
 **Expected Output:** `test_data/task_e/output.zip`
 
 **Verification Criteria:**
-- ZIP file created successfully
+- Language supported: AI produced a valid archiving script (Factor 1)
+- ZIP file created successfully — Req 2.1 / 2.2
 - ZIP file is valid (passes zip integrity check)
 - Original file present inside archive
 - Archive contains expected compression ratio (> 10% for text)
 - Archive can be extracted without errors
 - Extracted content matches original
+- Compilation warnings captured from stderr — Req 2.3
+- Readability: comment density logged — Factor 4
 
 **Edge Cases Tested:**
 - Very small files (< 100 bytes)
@@ -224,12 +239,15 @@ INSERT INTO employees VALUES
 ```
 
 **Verification Criteria:**
-- Connection established without errors
+- Language supported: AI produced a valid DB connection script (Factor 1)
+- Connection established without errors — Req 2.1
+- Compilation warnings captured from stderr — Req 2.3
 - SQL query executed successfully
-- Correct number of records returned
+- Correct number of records returned — Req 2.2
 - Data types correct (int, string, date)
-- No sensitive data exposure
+- No sensitive data exposure — Factor 3
 - Connection properly closed
+- Readability: cyclomatic complexity and comment density logged — Factor 4
 
 ---
 
@@ -274,12 +292,15 @@ db.products.insertMany([
 ```
 
 **Verification Criteria:**
-- Connection established successfully
+- Language supported: AI produced a valid MongoDB script (Factor 1)
+- Connection established successfully — Req 2.1
+- Compilation warnings captured from stderr — Req 2.3
 - Query executed correctly
-- Correct number of documents returned
+- Correct number of documents returned — Req 2.2
 - Document structure matches schema
 - Numeric values correct
 - Connection properly closed
+- Readability: comment density and complexity logged — Factor 4
 
 ---
 
@@ -313,12 +334,16 @@ db.products.insertMany([
 ```
 
 **Verification Criteria:**
-- Password properly hashed (bcrypt, argon2, PBKDF2, or scrypt)
+- Language supported: AI produced valid JS/PHP code embeddable in a web page (Factor 1)
+- Password properly hashed (bcrypt, argon2, PBKDF2, or scrypt) — Req 2.1 / 2.2
 - Hash is not reversible
 - Same password produces different hash (due to salt)
 - Verification function works correctly
-- No common vulnerabilities (plain text storage, weak algorithm, etc.)
+- No common vulnerabilities (plain text storage, weak algorithm, etc.) — Req 2.4 / Factor 3
+- Security mitigations generated for any findings (Factor 3)
+- Compilation warnings captured from stderr — Req 2.3
 - HTML sanitization applied if web-embeddable
+- Readability: comment density and complexity logged — Factor 4
 
 ---
 
@@ -377,13 +402,13 @@ This simple approach is sufficient for research—readers can checkout the exact
 
 ## Example Benchmark Run
 
-When you run benchmarks and collect results, your results CSV should look like:
+When you run benchmarks and collect results, your results CSV should capture all **5 evaluation factors**:
 
 ```csv
-model,task,attempt,status,result,timestamp,test_data_commit,python_version
-gpt-4-turbo,A,1,pass,correct,2024-02-16T10:30:00Z,a1b2c3d,3.11.8
-gpt-4-turbo,B,1,pass,correct,2024-02-16T10:32:15Z,a1b2c3d,3.11.8
-claude-3-sonnet,A,1,pass,correct,2024-02-16T10:35:22Z,a1b2c3d,3.11.8
+model,task,attempt,language_supported,compile_status,compilation_warnings,functional_correctness,security_issues,security_mitigations,readability_score,comment_density,exec_time_ms,memory_mb,test_data_commit,python_version
+gpt-4-turbo,A,1,yes,success,,1.0,0,[],3,0.15,45,12,a1b2c3d,3.11.8
+gpt-4-turbo,B,1,yes,warning,"UnusedVariable at line 8",1.0,1,"[{fix: 'remove unused var'}]",5,0.08,120,18,a1b2c3d,3.11.8
+claude-3-sonnet,A,1,yes,success,,1.0,0,[],2,0.22,38,11,a1b2c3d,3.11.8
 ```
 
-This allows anyone reading your paper to see exactly which test data and Python version were used.
+This dataset covers all 5 required evaluation factors and allows computation of the **Best AI Per Task** final output.

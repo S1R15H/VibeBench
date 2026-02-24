@@ -130,32 +130,3 @@ If you continue research beyond 12 weeks, consider:
 
 Done! Your research is now published and citable.
 
----
-
-## Support & Documentation
-
-### Integration Documentation
-Each integration includes:
-- Setup guide (5 min quickstart)
-- Configuration reference
-- Troubleshooting guide
-- Example workflows
-- FAQ
-
-### Developer Support
-- Slack community channel: #vibebench-integrations
-- GitHub issues for bugs/features
-- Monthly office hours for integration questions
-
----
-
-## Future Integrations (Backlog)
-
-- AWS CodePipeline
-- Google Cloud Build
-- Azure Pipelines
-- PagerDuty (incident escalation)
-- HashiCorp Vault (secrets)
-- Snyk (vulnerability scanning)
-- Linear (issue tracking)
-- Notion (documentation)

@@ -1,340 +1,148 @@
-# VibeBench Implementation Complete - Documentation Summary
+# VibeBench Implementation Overview
 
-## Overview
-All VibeBench documentation has been created and enhanced to support a complete project implementation with clear phasing, niche market differentiation, and enterprise-ready architecture.
+## Project Summary
 
-## New & Updated Documentation Files
+VibeBench is a **student research project** designed to evaluate and compare AI-based coding assistants across standardized programming tasks. The goal is to produce a publishable research paper with an open-source framework and public dataset — not a commercial product.
 
-### 1. **REQUIREMENTS.md** (Enhanced)
-**Changes:** Added comprehensive market differentiation features and positioning
-- Tier 1 Core Differentiators (MVP Phase)
-  - Real-time dashboard
-  - Historical trend tracking
-  - Security vulnerability categorization (OWASP)
-  - CI/CD pipeline integration
-- Tier 2 Premium Features
-  - Cost-effectiveness analysis
-  - Compliance & audit reporting (SOC2, HIPAA, PCI-DSS)
-  - Language-specific deep-dive suites (Rust, Go, TypeScript)
-  - Fine-tuning feedback loops
-- Tier 3 Enterprise Features
-  - Predictive switching recommendations
-  - Custom task definition engine
-  - White-label SaaS offering
-- **Market positioning statement** establishing VibeBench as independent, enterprise-grade evaluator
-
-**Key Insight:** Transforms VibeBench from a basic benchmarking tool to a comprehensive AI assistant evaluation platform with competitive advantages.
+**Timeline:** 12 weeks (one semester)  
+**Team:** 4-6 students + 1 faculty advisor  
+**Budget:** $0-50 (API trial credits)  
+**Stack:** Python + SQLite + Docker (optional)
 
 ---
 
-### 2. **ARCHITECTURE.md** (Completely Redesigned)
-**Changes:** Expanded from basic component list to production-ready architecture
-- **Enhanced Frontend:** PyQt6 desktop + React web dashboard with WebSocket streaming
-- **Advanced Orchestrator:** Multi-stage pipeline with error recovery and timeout handling
-- **Refined Sandbox Layer:** Resource-limited Docker containers with security policies
-- **Multi-Database Strategy:**
-  - SQLite for metadata
-  - InfluxDB/Prometheus for time-series metrics
-  - Elasticsearch for searchable findings (optional)
-- **Security Scanner Suite:** Modular architecture supporting multiple tools per language
-- **New Modules:**
-  - Compliance analyzer (OWASP mapping, regulatory checks)
-  - Cost tracking and ROI calculator
-  - Historical trend database
-- **Scalability Considerations:** Dev → Staging → Production → Enterprise cloud deployment
+## Requirements Coverage
 
-**Key Insight:** Architecture now supports both single-machine MVP and enterprise multi-region deployments.
+Every documentation file and implementation component maps to the 5 evaluation factors and 4 report metrics from `REQUIREMENTS.md`:
 
----
-
-### 3. **API_INTEGRATION.md** (New)
-**Content:** Concrete specifications for AI model integration
-- **Supported Models:** GitHub Copilot, OpenAI (GPT-3.5/4/4-Turbo), Anthropic (Claude 3), Google (Gemini)
-- **Authentication:** OAuth, API keys, token management strategies
-- **Rate Limiting:** Per-provider limits, burst handling, token bucket algorithm
-- **Model Versioning:** Version pinning strategy for reproducibility
-- **Cost Tracking:** Token counting and pricing per model
-- **Error Handling:** Retry logic, fallback strategies, timeout management
-- **Testing:** Offline mode, staging environment, integration tests
-- **Future Expansion:** Mistral, Hugging Face, xAI, local LLMs
-
-**Key Insight:** Enables seamless integration of multiple AI providers with enterprise-grade reliability.
+| Requirement | Factor | Covered By |
+|---|---|---|
+| Supported programming languages | Factor 1 | `ARCHITECTURE.md` (`language_supported` field), `TEST_DATA_MANAGEMENT.md` (per-task language check), `NICHE_FEATURES.md` (Contribution 8) |
+| Bugs and errors in generated code | Factor 2 | `ARCHITECTURE.md` (`compile_status`, `compilation_errors`), `ROADMAP.md` Weeks 3–4 |
+| Security vulnerabilities + **mitigation** | Factor 3 | `ARCHITECTURE.md` (`security_issues`, `security_mitigations`, mitigation mapping), `ROADMAP.md` Week 4–5, `NICHE_FEATURES.md` Contribution 3 |
+| **Documentation and code readability** | Factor 4 | `ARCHITECTURE.md` (Readability Analyzer section, `readability_score`, `comment_density`), `ROADMAP.md` Week 4–5, `NICHE_FEATURES.md` Contribution 4 |
+| Efficiency and performance | Factor 5 | `ARCHITECTURE.md` (`execution_time_ms`, `memory_used_mb`), `ROADMAP.md` Week 3–4 |
+| Does code compile without errors? | Req 2.1 | `ARCHITECTURE.md` (`compile_status`), all task verification criteria in `TEST_DATA_MANAGEMENT.md` |
+| Does code do what it's supposed to? | Req 2.2 | `ARCHITECTURE.md` (`functional_correctness`), task verifiers in `ROADMAP.md` Week 3–4 |
+| **Any warnings when compiled/interpreted?** | Req 2.3 | `ARCHITECTURE.md` (`compilation_warnings` via stderr), `ROADMAP.md` Week 4–5, all task criteria in `TEST_DATA_MANAGEMENT.md` |
+| Any security vulnerabilities? | Req 2.4 | `ARCHITECTURE.md` (Bandit/npm audit), `ROADMAP.md` Week 4–5 |
+| **Choose best AI per task** (final output) | Core req | `ARCHITECTURE.md` (Best Model Per Task report), `ROADMAP.md` Week 10, `NICHE_FEATURES.md` implicit in all contributions |
 
 ---
 
-### 4. **TEST_DATA_MANAGEMENT.md** (New)
-**Content:** Standardized test data and reproducibility framework
-- **Task-by-Task Test Cases:** Detailed specifications for all 8 tasks with:
-  - Input data specifications
-  - Expected outputs
-  - Verification criteria
-  - Edge cases
-- **Test Data Structure:**
-  - Versioned data (v1.0, v2.0, etc.)
-  - Manifest with checksums and change logs
-  - Backward compatibility strategy
-- **Database Seeding:**
-  - Automated setup scripts
-  - Docker Compose configuration
-  - Health checks
-- **Reproducibility Guardrails:**
-  - Deterministic execution (fixed seeds, UTC timezone)
-  - Environmental variables standardization
-  - Pre-run validation checklist
-  - Benchmark report with reproducibility score
-- **Maintenance:** Versioning, archival, long-term storage
+## Documentation Files
 
-**Key Insight:** Ensures all benchmarks are reproducible and comparable across runs.
+### 1. [REQUIREMENTS.md](REQUIREMENTS.md)
+Original project specification + research-focused objectives.
+- 8 programming tasks (A–H)
+- 5 evaluation factors and 4 report metrics (see table above)
+- Research contributions targeting ICSE/FSE/MSR venues
+- Explicit list of what is **not** being built (enterprise SaaS, CI/CD, compliance)
 
----
+### 2. [RESEARCH.md](RESEARCH.md)
+Metric definitions and evaluation methodology.
+- Factor 1 (Languages): Binary yes/no per task per model
+- Factor 2 (Bugs): stderr capture + runtime exception detection; 0/1/2 scoring
+- Factor 3 (Security): Bandit, npm audit, SonarQube; High/Medium/Low severity + mitigations
+- Factor 4 (Readability): Radon cyclomatic complexity, comment density, Likert scale
+- Factor 5 (Performance): `time.perf_counter()`, peak memory
 
-### 5. **NICHE_FEATURES.md** (New)
-**Content:** Market differentiation and competitive advantages
-- **Tier 1 Core Differentiators:**
-  - AI Model Evolution Tracking (unique longitudinal data)
-  - OWASP Top 10 Classification (security-focused)
-  - Cost-Effectiveness Analysis ($/quality ratio)
-  - CI/CD Pipeline Integration (workflow embedding)
-- **Tier 2 Premium Features:**
-  - Compliance Reporting (SOC2, HIPAA, PCI-DSS, GDPR, FedRAMP)
-  - Language-Specific Analysis (Rust, Go, TypeScript, Polyglot)
-  - Fine-Tuning Feedback Loop (prompt optimization)
-- **Tier 3 Enterprise Features:**
-  - Predictive Switching Recommendations (ML-based)
-  - Custom Task Engine (organization-specific benchmarks)
-  - White-Label SaaS (multi-tenant deployment)
-- **Competitive Positioning:** Comparison matrix vs. GitHub Benchmarks, LLM Leaderboards, SonarQube
-- **Market Strategy:** Year 1 (establish authority), Year 2 (monetize), Year 3 (industry standard)
+### 3. [GUIDELINES.md](GUIDELINES.md)
+Project lifecycle and coding standards.
+- Phase A: Framework development (GUI, orchestrator, sandbox, reporting engine)
+- Phase B: Experimentation — collect data, automated testing, manual readability review, final report
+- Safety: all generated code must run inside Docker; API keys in `.env`
 
-**Key Insight:** Positions VibeBench as a unique, multi-dimensional evaluation platform not replicated by competitors.
+### 4. [ARCHITECTURE.md](ARCHITECTURE.md)
+Simple design for a single machine covering all 5 factors.
+- **GUI:** Next.js task/model selector
+- **Orchestrator:** Fetch → Execute → Capture warnings → Scan security → Analyze readability → Store
+- **Database:** SQLite with all required fields (compile_status, compilation_warnings, readability_score, security_mitigations, etc.)
+- **Security scanner:** Bandit + mitigation mapping (`B303 → "use bcrypt"`)
+- **Readability analyzer:** Radon (cyclomatic complexity) + comment density
+- **Report:** Per-run report + final "Best AI Per Task" summary table
+- Philosophy: Simple > Complex, Transparent > Black box, Reproducible > Optimized
 
----
+### 5. [ROADMAP.md](ROADMAP.md)
+12-week semester timeline.
+- **Phase 1 (Weeks 1–6):** MVP — all 8 tasks working, all 5 metric fields stored, CSV export with warnings + mitigations + readability columns
+- **Phase 2 (Weeks 7–9):** Data collection — 320 benchmark runs across 4 models
+- **Phase 3 (Weeks 10–12):** Analysis across all 5 factors, Best AI Per Task table, research paper
 
-### 6. **DEPLOYMENT_STRATEGY.md** (New)
-**Content:** Complete deployment architecture and operational procedures
-- **Development Environment:** Local Docker Compose setup for rapid iteration
-- **Staging Environment:** 2-replica Kubernetes cluster with load balancing
-- **Production Environment:**
-  - Multi-region GKE clusters (us-central1 + eu-west1)
-  - Cloud SQL (MySQL) with HA and automatic failover
-  - MongoDB Atlas with replica sets
-  - InfluxDB Cloud with geo-replication
-- **Kubernetes Deployments:**
-  - StatefulSets for databases
-  - HPA (Horizontal Pod Autoscaler) configuration
-  - Resource requests/limits per pod
-  - Liveness/readiness probes
-- **High Availability:**
-  - RTO < 30 minutes, RPO < 1 hour
-  - Daily backups with 30-day retention
-  - Disaster recovery procedures
-- **Monitoring & Observability:**
-  - ELK stack (Elasticsearch, Logstash, Kibana)
-  - Prometheus metrics and AlertManager alerts
-  - Grafana dashboards
-- **Security:**
-  - Network policies restricting traffic
-  - Secrets management via GCP Secret Manager
-  - TLS/SSL with Let's Encrypt
-  - RBAC for Kubernetes access
-- **Enterprise Multi-Tenant:** Namespace isolation, database schemas, resource quotas
-- **Operational Runbooks:** Common issue resolution procedures
-- **Cost Optimization:** Instance sizing, reserved instances, spot instances, storage tiering
+### 6. [NICHE_FEATURES.md](NICHE_FEATURES.md)
+8 research contributions for the paper, each mapping to a requirement:
+1. Standardized benchmarking methodology
+2. Comparative model evaluation (compilation + correctness)
+3. Security analysis + **mitigation suggestions** (Factor 3)
+4. **Documentation & readability analysis** using Radon (Factor 4)
+5. Model evolution tracking over time
+6. Cost-effectiveness analysis
+7. Task difficulty analysis
+8. **Supported languages & compilation warning patterns** (Factor 1 + Req 2.3)
 
-**Key Insight:** VibeBench can scale from local development to enterprise multi-region SaaS deployment.
+### 7. [DEPLOYMENT_STRATEGY.md](DEPLOYMENT_STRATEGY.md)
+Local/lab setup in under 15 minutes.
+- `git clone` → `npm install` (frontend) & `pip install` (backend) → start dev servers
+- Optional Docker for safe code execution
+- SQLite only — no database server needed
+- API keys in `.env`; cost $0-50 total for whole project
+
+### 8. [TEST_DATA_MANAGEMENT.md](TEST_DATA_MANAGEMENT.md)
+Specifications for all 8 benchmark tasks with full verification criteria.
+- Each task now has verification criteria covering all 5 factors:
+  - **Factor 1** (language support), **Factor 2/Req 2.1** (compile check), **Req 2.3** (warnings), **Req 2.2** (correctness), **Factor 3** (security), **Factor 4** (readability)
+- Example CSV captures all 5 factor columns
+- Database seeding for Tasks F & G via Docker
+
+### 9. [API_INTEGRATION.md](API_INTEGRATION.md)
+Simple 5-minute API setup for 4 models.
+- OpenAI GPT-4 Turbo, Anthropic Claude 3 Sonnet, Google Gemini Pro, GitHub Copilot (manual)
+- Keys stored in `.env`, loaded with `python-dotenv`
+- Simple error handling: 60-second backoff on rate limits
+
+### 10. [INTEGRATION_ROADMAP.md](INTEGRATION_ROADMAP.md)
+3 simple optional integrations for research workflow.
+1. **GitHub** — public repo for reproducibility
+2. **Zenodo/OSF** — permanent dataset archival with DOI
+3. **Conference/Journal** — 4–6 page paper (ICSE, FSE, MSR)
 
 ---
 
-### 7. **INTEGRATION_ROADMAP.md** (New)
-**Content:** Third-party tool and platform integrations
-- **Phase 1 (Q1 2024):** Core CI/CD integrations
-  - GitHub Actions plugin (`vibebench/check-ai-code@v1`)
-  - GitLab CI job template
-  - Jenkins plugin
-  - Pre-commit hook
-- **Phase 2 (Q2 2024):** Developer tools
-  - VS Code Extension
-  - JetBrains IDE Plugin (IntelliJ, PyCharm, WebStorm)
-  - Neovim LSP integration
-- **Phase 3 (Q3 2024):** Monitoring & observability
-  - Datadog integration (custom metrics + events)
-  - New Relic integration (APM + logs)
-  - Prometheus metrics export
-- **Phase 4 (Q4 2024):** Communication & notifications
-  - Slack App with workflows
-  - Microsoft Teams integration
-- **Phase 5 (Q1 2025+):** Enterprise platforms
-  - Confluence (auto-publishing reports)
-  - Jira (auto-ticketing findings)
-  - ServiceNow (ITSM integration)
-- **Integration Priority Matrix:** Impact vs. Effort analysis
-- **API Rate Limits & SLAs:** Per-endpoint limits and guarantees
-- **Documentation & Support:** 5-min quickstart for each integration
+## Key Design Decisions
 
-**Key Insight:** VibeBench becomes embedded in developer workflows across the entire toolchain.
+| Decision | Choice | Reason |
+|----------|--------|--------|
+| Architecture | Monolithic Python | Simple to understand and debug |
+| Database | SQLite | Zero setup, single file, portable |
+| Execution | Sequential (not parallel) | Reproducibility > speed |
+| Security scanning | Bandit + mitigation mapping | Covers Factor 3 fully including mitigations |
+| Readability analysis | Radon + comment density | Automated Factor 4 metrics |
+| Warning capture | subprocess stderr | Satisfies Requirement 2.3 |
+| Final output | Best AI Per Task table | Directly answers core requirement |
 
 ---
 
-### 8. **ROADMAP.md** (Completely Redesigned)
-**Changes:** Transformed from simple stage list to comprehensive phased delivery plan
-- **Phase 0 (Weeks 1-8): Framework Stabilization**
-  - Core MVP with all 8 tasks functional
-  - Basic GUI, Docker sandbox, security scanning
-  - Report generation (PDF/HTML/CSV)
-  - Success: Zero critical bugs, < 30 min per benchmark
-  
-- **Phase 1 (Weeks 9-16): Tier 1 Differentiators**
-  - Real-time web dashboard with WebSocket streaming
-  - Historical trend analysis (InfluxDB integration)
-  - OWASP vulnerability classification
-  - CI/CD integration suite (4 platforms)
-  - Success: 100+ GitHub stars, 1,000+ GitHub Actions/month
-  
-- **Phase 2 (Weeks 17-24): Premium Features**
-  - Cost-effectiveness analysis module
-  - Compliance reporting (SOC2, HIPAA, PCI-DSS)
-  - Language-specific benchmarks (Rust, Go, TypeScript)
-  - Fine-tuning feedback loop
-  - Success: 3+ enterprise pilots, 10,000+ benchmarks
-  
-- **Phase 3 (Weeks 25-36): Enterprise Features**
-  - Predictive switching recommendations (ML model)
-  - Custom task definition engine (50+ community tasks)
-  - White-label SaaS platform
-  - Success: 5+ paying customers, $1M+ ARR
-  
-- **Resource Allocation:** Team scaling from 4 to 10+ people
-- **Risk Mitigation:** Technical, market, and operational risks with mitigations
-- **Success Metrics:** Phase-by-phase KPIs
-- **Future Roadmap:** 2025-2026 vision
+## Success Criteria
 
-**Key Insight:** Clear, sequenced delivery path from MVP to market-leading enterprise platform.
+| Week | Milestone |
+|------|-----------|
+| Week 6 | All 8 tasks execute; all 5 metric columns stored; CSV export with warnings, readability, mitigations |
+| Week 9 | 320 benchmark records; Cost within $50; warnings + readability + mitigations logged for all runs |
+| Week 12 | Research paper; Best AI Per Task table published; code open-sourced; dataset on Zenodo |
 
 ---
 
-## Documentation Highlights
+## What This Project Is NOT
 
-### Market Differentiation
-VibeBench is positioned as:
-- **Independent:** Multi-vendor comparison (unlike GitHub's vendor-biased benchmarks)
-- **Comprehensive:** Security, cost, compliance, performance (not just accuracy)
-- **Actionable:** Turns data into recommendations (fine-tuning, switching, optimization)
-- **Enterprise-Grade:** Compliance, scalability, multi-tenancy
-- **Research-Ready:** Reproducible, versioned, anonymizable data
+- ❌ A production SaaS platform
+- ❌ An enterprise tool with Kubernetes/multi-region deployment
+- ❌ A real-time dashboard with WebSocket streaming
+- ❌ A compliance reporting system (SOC2/HIPAA)
+- ❌ A 36-week commercial product roadmap
 
-### Niche Advantages
-1. **Real-Time Dashboards** - Only benchmark tool with live WebSocket streaming
-2. **Historical Trend Tracking** - Unique longitudinal data on model evolution
-3. **Cost-Effectiveness Analysis** - Only tool comparing quality-per-dollar
-4. **OWASP Classification** - Security teams' focus area, regulatory compliance
-5. **CI/CD Embedding** - Shifts testing left into developer workflows
-6. **Compliance Reporting** - SOC2/HIPAA/PCI-DSS audit-ready reports
-7. **Custom Task Engine** - Organizations benchmark domain-specific code
-8. **Predictive Recommendations** - ML-powered switching guidance
-
-### Enterprise Readiness
-- Multi-region cloud deployment (GKE, Cloud SQL, MongoDB Atlas)
-- High availability (RTO < 30 min, RPO < 1 hour)
-- Comprehensive monitoring (ELK, Prometheus, Grafana)
-- Security hardening (network policies, secrets management, RBAC)
-- Multi-tenant SaaS architecture
-- Operational runbooks for common issues
-
-### Integration Breadth
-- 15+ planned integrations across CI/CD, IDEs, monitoring, communication
-- 5-phase rollout prioritizing developer workflow embedding
-- Extensible provider pattern for future platforms
+It is a **12-week research project** targeting a conference paper. Simplicity and reproducibility are the top priorities.
 
 ---
 
-## Files Created
-
-| File | Size | Content | Purpose |
-|------|------|---------|---------|
-| API_INTEGRATION.md | 15KB | Concrete API specs for 4 AI models | Dev reference |
-| TEST_DATA_MANAGEMENT.md | 20KB | Test case specs + reproducibility framework | QA reference |
-| NICHE_FEATURES.md | 18KB | Market differentiation + competitive analysis | Product strategy |
-| DEPLOYMENT_STRATEGY.md | 25KB | Dev/staging/prod cloud architecture | DevOps reference |
-| INTEGRATION_ROADMAP.md | 22KB | 15+ tool integrations across 5 phases | Integration guide |
-
-**Total New Documentation:** ~100KB of actionable, detailed specifications
-
----
-
-## Files Updated
-
-| File | Changes | Impact |
-|------|---------|--------|
-| REQUIREMENTS.md | +11KB on market features & positioning | Product strategy |
-| ARCHITECTURE.md | +10KB on components, databases, scalability | Technical design |
-| ROADMAP.md | Complete rewrite: 5 stages → 4 phases with 36 weeks | Project planning |
-
----
-
-## Next Steps for Implementation Team
-
-1. **Start Phase 0 (MVP Development):**
-   - Reference: ROADMAP.md Phase 0 + ARCHITECTURE.md Stage 1-5
-   - Setup: Use DEPLOYMENT_STRATEGY.md for local dev environment
-   - Testing: Follow TEST_DATA_MANAGEMENT.md for all 8 tasks
-   - APIs: Implement using API_INTEGRATION.md specifications
-
-2. **Plan Phase 1 (Differentiators):**
-   - Reference: NICHE_FEATURES.md (Tier 1 features)
-   - Integrations: Use INTEGRATION_ROADMAP.md for Phase 1 CI/CD
-   - Architecture: Implement InfluxDB, dashboard, security scanning
-
-3. **Understand Market Position:**
-   - Read: NICHE_FEATURES.md (competitive advantages)
-   - Business Plan: Use market sizing and positioning statement
-
-4. **Plan Enterprise Deployment:**
-   - Reference: DEPLOYMENT_STRATEGY.md (production architecture)
-   - Multi-Tenant: Section on white-label SaaS setup
-
----
-
-## Key Metrics to Track
-
-### Phase 0 Success
-- ✅ All 8 tasks functioning
-- ✅ Zero critical bugs (2-week stability)
-- ✅ Benchmark run time < 30 min
-
-### Phase 1 Success
-- ✅ 100+ GitHub stars
-- ✅ 1,000+ GitHub Actions runs/month
-- ✅ Dashboard latency < 500ms
-- ✅ OWASP classification accuracy > 90%
-
-### Phase 2 Success
-- ✅ 3+ enterprise pilot customers
-- ✅ 10,000+ benchmark runs
-- ✅ Cost analysis accuracy within 5%
-
-### Phase 3 Success
-- ✅ 5+ paying white-label customers
-- ✅ $1M+ ARR
-- ✅ 50,000+ benchmark runs
-- ✅ Industry standard status
-
----
-
-## Conclusion
-
-VibeBench is now fully documented with:
-- ✅ Clear technical architecture for MVP to enterprise scale
-- ✅ Comprehensive API integration specifications
-- ✅ Standardized test data and reproducibility framework
-- ✅ Market-winning niche features and positioning
-- ✅ Production-ready deployment strategies
-- ✅ Detailed integration roadmap with 15+ tools
-- ✅ Phased 36-week delivery plan with success metrics
-
-**The implementation team can now execute with clarity on both technical requirements and market positioning.**
-
----
-
-**Generated:** February 16, 2026  
-**Documentation Version:** 2.0  
-**Status:** Ready for Implementation
+**Last Updated:** February 2026  
+**Status:** All docs aligned with 5 evaluation factors and 4 report metrics from REQUIREMENTS.md

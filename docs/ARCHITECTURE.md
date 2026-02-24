@@ -13,7 +13,7 @@ VibeBench is a simple, reproducible benchmarking framework that runs on a single
 ## Components
 
 ### 1. The Frontend (GUI)
-* **Tech:** Python `PyQt6` (lightweight, single executable)
+* **Tech:** `Next.js` (React framework, modern web GUI)
 * **Responsibility:** 
   * User task selection (A-H dropdown)
   * AI model selection (Copilot, GPT-4, Claude, Gemini)
@@ -22,17 +22,19 @@ VibeBench is a simple, reproducible benchmarking framework that runs on a single
   * Results summary panel (pass/fail, issue counts)
   * Export button (CSV, JSON)
 
-### 2. The Core Orchestrator (Backend)
+### 2. The Core Orchestrator & API (Backend)
+* **Tech:** `FastAPI` (Python API to connect frontend GUI with the orchestrator)
 * **Single-threaded pipeline** (simplicity over performance):
-    1. User clicks "Run Benchmark"
-    2. For each AI model:
+    1. User clicks "Run Benchmark" in Next.js GUI
+    2. Frontend sends API request to FastAPI backend
+    3. For each AI model (handled by orchestrator):
        - Fetch code (API call or manual input)
        - Save to temporary file
        - Compile/run it
        - Check results
        - Scan for security issues
        - Store results
-    3. Display summary
+    4. Return summary to frontend
 
 * **Error handling:** 
     * Timeout: 60 seconds per task
@@ -61,40 +63,69 @@ WORKDIR /app
 
 ### 4. The Database (SQLite - Single File)
 * **Tech:** `SQLite` (no setup needed, single .db file)
-* **Schema - Simple Experiments Table:**
+* **Schema - Experiments Table:**
   ```
   experiments
   ├─ id (primary key)
   ├─ timestamp (when run)
   ├─ ai_model (Copilot, GPT-4, Claude, Gemini)
   ├─ task_id (A-H)
-  ├─ language (python, javascript, etc)
+  ├─ language (python, javascript, php, etc.)
+  ├─ language_supported (yes/no — did AI produce a valid file?)
   ├─ code (generated code snippet)
-  ├─ compile_status (success/failure)
-  ├─ compilation_errors (text)
-  ├─ functional_correctness (0-1 score)
-  ├─ security_issues (count)
-  ├─ security_details (JSON)
+  ├─ compile_status (success/failure/warning)
+  ├─ compilation_errors (text from stderr)
+  ├─ compilation_warnings (text from stderr — requirement 2.3)
+  ├─ functional_correctness (0-1 score — requirement 2.2)
+  ├─ security_issues (count — requirement 2.4)
+  ├─ security_details (JSON: [{type, severity, line, description}])
+  ├─ security_mitigations (JSON: [{issue_id, suggested_fix}])
+  ├─ readability_score (integer: Radon cyclomatic complexity)
+  ├─ comment_density (float: comment lines / total lines)
   ├─ execution_time_ms (integer)
   ├─ memory_used_mb (integer)
   └─ notes (any observations)
   ```
 
 ### 5. Security Scanner (Simple Integration)
-* **Python:** Bandit (already available, single command)
-* **JavaScript:** npm audit (built-in)
-* **PHP:** PHPStan (installed in Docker)
-* **Processing:** Parse output → Extract issues → Store in DB
+* **Python:** `Bandit` — detects injection, hardcoded secrets, weak crypto
+* **JavaScript/PHP:** `npm audit` / ESLint security plugin
+* **Processing:** Parse output → Extract issue type, severity, line → Store in DB
+* **Mitigation output:** For each finding, the framework maps it to a plain-English fix suggestion
 
-**Simple approach:**
+**Approach:**
 ```python
 # For each code file
-result = subprocess.run(['bandit', file], capture_output=True)
+result = subprocess.run(['bandit', '-f', 'json', file], capture_output=True)
 issues = parse_bandit_output(result.stdout)
+
+# Map each issue to a mitigation suggestion
+MITIGATIONS = {
+    'B303': 'Use hashlib.sha256 or bcrypt instead of MD5',
+    'B106': 'Remove hardcoded password; use environment variable',
+    'B608': 'Use parameterized queries to prevent SQL injection',
+    # ... etc.
+}
+for issue in issues:
+    issue['suggested_fix'] = MITIGATIONS.get(issue['test_id'], 'Review and remediate manually')
+
 store_in_database(issues)
 ```
 
-### 6. Cost Tracking (Simple CSV)
+### 6. Readability Analyzer
+* **Python:** `Radon` — computes cyclomatic complexity (lower = simpler code)
+* **All languages:** Comment density = comment lines / total lines
+* **Manual (Phase B):** Likert scale (1–5) for variable naming conventions
+
+```python
+import radon.complexity as radon_cc
+
+results = radon_cc.cc_visit(source_code)
+cyclomatic_score = sum(r.complexity for r in results) / len(results)
+comment_density = count_comment_lines(source_code) / total_lines
+```
+
+### 7. Cost Tracking (Simple CSV)
 * **No complex billing system**
 * **Simple tracking:**
   ```csv
@@ -103,7 +134,7 @@ store_in_database(issues)
   ```
 * **Analysis:** Load CSV into pandas, calculate averages
 
-### 7. Historical Trend Analysis (CSV/JSON)
+### 8. Historical Trend Analysis (CSV/JSON)
 * **Data storage:** Export results as CSV after each run
 * **Analysis:** Python script (matplotlib/seaborn) for trend visualization
 * **No real-time dashboard:** Static reports good enough for research
@@ -127,8 +158,8 @@ gpt-4 Improvement Over Time:
            │
            ▼
     ┌──────────────┐
+    │  FastAPI     │
     │ Orchestrator │
-    │  (Python)    │
     └──────┬───────┘
            │
     ┌──────┴──────────┬─────────────┐
@@ -150,16 +181,19 @@ gpt-4 Improvement Over Time:
 
 ## Technology Stack (Research-Friendly)
 
-| Component | Technology | Why |
-|-----------|-----------|-----|
-| Language | Python 3.10+ | Easy to read, widely used in research |
-| GUI | PyQt6 | Simple, no build step needed |
-| Database | SQLite | Zero setup, single file, portable |
-| Code Execution | Docker | Safe, reproducible, isolated |
-| Security Scanning | Bandit, npm audit | Free, well-known, easy to parse |
-| Analysis | pandas, matplotlib | Standard for data analysis |
-| Version Control | Git + GitHub | Transparent, public code |
-| Testing | pytest | Simple unit tests for verifying tasks |
+| Component | Technology | Covers Requirement |
+|-----------|-----------|--------------------|
+| Language | Python 3.10+ | — |
+| GUI | Next.js (React) | Req (1): task selection interface |
+| API | FastAPI | Connects Next.js to Python backend |
+| Database | SQLite | All metrics stored |
+| Code Execution | Docker (optional) | Safe, reproducible, isolated |
+| Security Scanning | Bandit, npm audit, ESLint | Factor 3: security vulnerabilities + mitigations; Req 2.4 |
+| Readability Analysis | Radon (cyclomatic complexity) | Factor 4: documentation & readability |
+| Warning Capture | subprocess stderr | Factor 2 + Req 2.3: compilation warnings |
+| Analysis | pandas, matplotlib | Summary stats, graphs, best-model ranking |
+| Version Control | Git + GitHub | Reproducibility |
+| Testing | pytest | Framework correctness |
 
 ## Execution Flow (End-to-End Example)
 
@@ -177,11 +211,14 @@ gpt-4 Improvement Over Time:
 4. **Security Scan:**
    - `bandit /tmp/task_b_gpt4_20240216_143022.py`
    - Parse output: 3 issues (hardcoded path, no input validation, missing lock)
-5. **Store Result:**
-   - SQL INSERT: timestamp, model, task, code, success, issues_count, issues_json
-6. **Display:**
-   - GUI shows: "✓ Task B passed (3 security warnings)"
-   - User can view generated code, issues, execution time
+5. **Readability:**
+   - `radon cc task_b_gpt4.py` → cyclomatic complexity score
+   - Count comment lines → comment density ratio
+6. **Store Result:**
+   - SQL INSERT: timestamp, model, task, code, compile_status, compilation_warnings, functional_correctness, security_issues, security_mitigations, readability_score, comment_density, execution_time_ms
+7. **Display:**
+   - GUI shows: "✓ Task B passed (3 security warnings, readability: B)"  
+   - User can view generated code, warnings, security mitigations, execution time
 
 ## Key Design Decisions
 
@@ -220,25 +257,39 @@ gpt-4 Improvement Over Time:
 - No custom dashboards needed
 - Transparent: Anyone can analyze the data
 
+**Best Model Per Task Report**
+- After collecting all benchmark data, generate a summary table:
+
+  ```
+  Task | Best Compilation | Best Security | Best Readability | Best Overall
+  A    | GPT-4 (98%)      | Claude (0.8 avg) | Gemini (CC=2)  | GPT-4
+  B    | Claude (91%)     | Claude (1.1 avg) | GPT-4 (CC=3)   | Claude
+  ...
+  ```
+- This is the final required output: "choose the best AI-based Coding Assistant tool for each programming task"
+
 ## Deployment on Lab Server
 
 **Minimal Setup (< 30 minutes):**
 ```bash
 # On lab server (Ubuntu 22.04)
 git clone https://github.com/S1R15H/VibeBench.git
-cd VibeBench
+cd VibeBench/backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Optional: Setup Docker for safe execution
-docker build -t vibebench .
+# Start the Python Backend API
+uvicorn api:app --reload &
 
-# Run the GUI
-python src/gui.py
+# Start the Next.js Frontend
+cd ../frontend
+npm install
+npm run dev
 
-# Or run from command line
-python src/cli.py --model gpt-4 --task B --language python
+# Or run from command line without GUI
+cd ../backend
+python cli.py --model gpt-4 --task B --language python
 ```
 
 **No complex infrastructure:**
