@@ -62,7 +62,7 @@ VibeBench is a student research project (not a startup) targeting publication at
 * [ ] Parse output → Extract vulnerability type, severity, line number
 * [ ] Map each finding to a plain-English mitigation suggestion (Factor 3: "proposed mitigation mechanisms")
 * [ ] Store security findings + mitigations in database
-* [ ] Integrate Radon for cyclomatic complexity (Factor 4: documentation & readability)
+* [ ] Integrate Lizard for cyclomatic complexity across all supported languages (Factor 4: documentation & readability)
 * [ ] Compute comment density: comment lines / total lines (Factor 4)
 * [ ] Capture `stderr` for compilation warnings — separate from errors (Requirement 2.3)
 * [ ] Store `compilation_warnings` field in SQLite

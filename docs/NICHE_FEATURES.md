@@ -103,7 +103,7 @@ Comment Density by Model:
 ```
 
 **Automated metrics used:**
-- **Cyclomatic Complexity** via `Radon` (Python): measures number of independent code paths
+- **Cyclomatic Complexity** via `Lizard` (27+ languages): measures number of independent code paths
 - **Comment Density**: ratio of comment lines to total code lines
 - **Manual Likert Scale (1–5)**: human reviewers rate variable naming conventions
 

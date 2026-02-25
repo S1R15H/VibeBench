@@ -113,15 +113,16 @@ store_in_database(issues)
 ```
 
 ### 6. Readability Analyzer
-* **Python:** `Radon` — computes cyclomatic complexity (lower = simpler code)
+* **All languages:** `Lizard` — computes cyclomatic complexity across 27+ languages (Python, JavaScript, PHP, Java, C/C++, Go, Ruby, Rust, Kotlin, Swift, and more)
 * **All languages:** Comment density = comment lines / total lines
 * **Manual (Phase B):** Likert scale (1–5) for variable naming conventions
 
 ```python
-import radon.complexity as radon_cc
+import lizard
 
-results = radon_cc.cc_visit(source_code)
-cyclomatic_score = sum(r.complexity for r in results) / len(results)
+# Works for any language — just pass the correct file extension
+analysis = lizard.analyze_file.analyze_source_code("code.py", source_code)
+cyclomatic_score = sum(fn.cyclomatic_complexity for fn in analysis.function_list) / len(analysis.function_list)
 comment_density = count_comment_lines(source_code) / total_lines
 ```
 
@@ -189,7 +190,7 @@ gpt-4 Improvement Over Time:
 | Database | SQLite | All metrics stored |
 | Code Execution | Docker (optional) | Safe, reproducible, isolated |
 | Security Scanning | Bandit, npm audit, ESLint | Factor 3: security vulnerabilities + mitigations; Req 2.4 |
-| Readability Analysis | Radon (cyclomatic complexity) | Factor 4: documentation & readability |
+| Readability Analysis | Lizard (cyclomatic complexity, 27+ languages) | Factor 4: documentation & readability |
 | Warning Capture | subprocess stderr | Factor 2 + Req 2.3: compilation warnings |
 | Analysis | pandas, matplotlib | Summary stats, graphs, best-model ranking |
 | Version Control | Git + GitHub | Reproducibility |
@@ -212,7 +213,7 @@ gpt-4 Improvement Over Time:
    - `bandit /tmp/task_b_gpt4_20240216_143022.py`
    - Parse output: 3 issues (hardcoded path, no input validation, missing lock)
 5. **Readability:**
-   - `radon cc task_b_gpt4.py` → cyclomatic complexity score
+   - `lizard task_b_gpt4.py` → cyclomatic complexity score (language auto-detected)
    - Count comment lines → comment density ratio
 6. **Store Result:**
    - SQL INSERT: timestamp, model, task, code, compile_status, compilation_warnings, functional_correctness, security_issues, security_mitigations, readability_score, comment_density, execution_time_ms

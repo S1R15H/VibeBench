@@ -116,7 +116,7 @@ Simple 5-minute API setup for 4 models.
 | Database | SQLite | Zero setup, single file, portable |
 | Execution | Sequential (not parallel) | Reproducibility > speed |
 | Security scanning | Bandit + mitigation mapping | Covers Factor 3 fully including mitigations |
-| Readability analysis | Radon + comment density | Automated Factor 4 metrics |
+| Readability analysis | Lizard + comment density | Automated Factor 4 metrics across 27+ languages |
 | Warning capture | subprocess stderr | Satisfies Requirement 2.3 |
 | Final output | Best AI Per Task table | Directly answers core requirement |
 
