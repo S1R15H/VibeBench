@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 type NavbarProps = {
   active?: "dashboard" | "run" | "history";
 };
@@ -18,9 +20,15 @@ export default function Navbar({ active = "dashboard" }: NavbarProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <button className={linkStyle("dashboard")}>Dashboard</button>
-        <button className={linkStyle("run")}>Run Benchmark</button>
-        <button className={linkStyle("history")}>Results History</button>
+        <Link href="/" className={linkStyle("dashboard")}>
+          Dashboard
+        </Link>
+        <Link href="/run" className={linkStyle("run")}>
+          Run Benchmark
+        </Link>
+        <Link href="/history" className={linkStyle("history")}>
+          Results History
+        </Link>
       </div>
     </nav>
   );
