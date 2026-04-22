@@ -1,2 +1,0 @@
-Hello VibeBench!
-This is a test file for Task A.

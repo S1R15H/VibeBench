@@ -1,4 +1,2 @@
-#Hello VibeBench!
-#This is a test file for Task A.
-#The AI model should read this file and output its contents.
-print("Hello VibeBench!\nThis is a test file for Task A.")
+Hello VibeBench!
+This is a test file for Task A.
