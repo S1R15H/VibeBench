@@ -1,0 +1,25 @@
+{
+  "title": "Q4 Reliability Report",
+  "records": [
+    {
+      "service": "auth",
+      "uptime": 99.91,
+      "incidents": 2
+    },
+    {
+      "service": "billing",
+      "uptime": 99.40,
+      "incidents": 4
+    },
+    {
+      "service": "search",
+      "uptime": 99.97,
+      "incidents": 1
+    },
+    {
+      "service": "notifications",
+      "uptime": 99.20,
+      "incidents": 5
+    }
+  ]
+}

@@ -1,9 +1,58 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Navbar from "./components/Navbar";
 import StatCard from "./components/StatCard";
+import { apiUrl } from "../lib/api";
+
+type HealthResponse = {
+  status: string;
+  backend: string;
+  database: {
+    status: string;
+    detail: string;
+  };
+  ready: boolean;
+};
 
 export default function Home() {
+  const [totalRuns, setTotalRuns] = useState(0);
+  const [modelCount, setModelCount] = useState(0);
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const frontendStatus = "Running";
+
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        const healthResponse = await fetch(apiUrl("/api/health"));
+        if (healthResponse.ok) {
+          const healthData: HealthResponse = await healthResponse.json();
+          setHealth(healthData);
+        }
+
+        const resultsResponse = await fetch(apiUrl("/api/results"));
+        if (resultsResponse.ok) {
+          const results = await resultsResponse.json();
+          setTotalRuns(Array.isArray(results) ? results.length : 0);
+        }
+
+        const modelsResponse = await fetch(apiUrl("/api/models"));
+        if (modelsResponse.ok) {
+          const payload = await modelsResponse.json();
+          const models = Array.isArray(payload?.models) ? payload.models : [];
+          setModelCount(models.length);
+        }
+      } catch (error) {
+        console.error("Failed to load dashboard health", error);
+      }
+    }
+
+    loadDashboard();
+  }, []);
+
+  const backendReady = health?.backend === "running";
+  const databaseReady = health?.database.status === "connected";
+
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -12,13 +61,13 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
             title="Total Runs"
-            value="0"
-            subtext="Benchmark records stored"
+            value={String(totalRuns)}
+            subtext="Benchmark records stored in SQLite"
           />
           <StatCard
             title="Models Tested"
-            value="5"
-            subtext="GPT-4, Claude, Gemini, Copilot"
+            value={String(modelCount)}
+            subtext="Configured model catalog from backend"
           />
           <StatCard
             title="Tasks Available"
@@ -27,8 +76,8 @@ export default function Home() {
           />
           <StatCard
             title="System Status"
-            value="Ready"
-            subtext="Frontend and backend connected"
+            value={health?.ready ? "Ready" : "Checking"}
+            subtext={health?.ready ? "Backend and database health checks passed" : "Waiting for backend and database health checks"}
           />
         </div>
 
@@ -60,17 +109,22 @@ export default function Home() {
             <div className="space-y-4">
               <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4">
                 <p className="text-sm text-neutral-400">Frontend</p>
-                <p className="text-green-400 font-medium mt-1">Running</p>
+                <p className="text-green-400 font-medium mt-1">{frontendStatus}</p>
               </div>
 
               <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4">
                 <p className="text-sm text-neutral-400">Backend API</p>
-                <p className="text-green-400 font-medium mt-1">Connected</p>
+                <p className={backendReady ? "text-green-400 font-medium mt-1" : "text-yellow-400 font-medium mt-1"}>
+                  {backendReady ? "Connected" : "Checking"}
+                </p>
+                {health?.database.detail ? <p className="mt-2 text-xs text-neutral-500">{health.database.detail}</p> : null}
               </div>
 
               <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4">
                 <p className="text-sm text-neutral-400">Database</p>
-                <p className="text-green-400 font-medium mt-1">Initialized</p>
+                <p className={databaseReady ? "text-green-400 font-medium mt-1" : "text-yellow-400 font-medium mt-1"}>
+                  {databaseReady ? "Connected" : "Checking"}
+                </p>
               </div>
             </div>
           </div>

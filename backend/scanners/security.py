@@ -1,6 +1,8 @@
-import subprocess
 import json
 import logging
+import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -9,123 +11,117 @@ logger = logging.getLogger(__name__)
 SEVERITY_RANK = {"LOW": 1, "MEDIUM": 2, "HIGH": 3}
 
 MITIGATIONS = {
-    "B101": "Do not use assert statements in production code; use explicit conditionals and raise appropriate exceptions.",
     "B102": "Avoid using exec(); it can execute arbitrary code and is a common attack vector.",
-    "B103": "Ensure file permissions are set appropriately; avoid overly permissive modes like 0o777.",
-    "B104": "Binding to 0.0.0.0 exposes the service on all interfaces; bind to a specific interface in production.",
     "B105": "Avoid hardcoded passwords; use environment variables or a secrets manager.",
-    "B106": "Avoid hardcoded passwords in function default arguments; use environment variables or a secrets manager.",
-    "B107": "Avoid hardcoded passwords in function arguments; use environment variables or a secrets manager.",
-    "B108": "Use a secure, application-specific temp directory rather than /tmp or /var/tmp.",
-    "B110": "Avoid bare except/pass blocks that silently swallow exceptions; log or re-raise them.",
-    "B112": "Avoid continue in bare except blocks; handle exceptions explicitly.",
-    "B201": "Flask debug mode exposes an interactive debugger; never enable it in production.",
-    "B301": "Use json or another safe serializer instead of pickle, which can execute arbitrary code on deserialization.",
-    "B302": "Use json instead of marshal for serialization; marshal is not secure against malicious data.",
-    "B303": "MD5 and SHA1 are cryptographically broken; use hashlib.sha256 or bcrypt for security-sensitive hashing.",
-    "B304": "This cipher or mode is considered weak; use AES-GCM or another modern authenticated encryption scheme.",
-    "B305": "This cipher mode (e.g. ECB) is insecure; use CBC or GCM with a random IV.",
-    "B306": "mktemp() is insecure; use tempfile.mkstemp() or tempfile.NamedTemporaryFile() instead.",
-    "B307": "eval() executes arbitrary code; avoid it or use ast.literal_eval() for safe literal parsing.",
-    "B308": "mark_safe() bypasses Django's XSS protection; ensure the content is truly safe before using it.",
-    "B310": "Validate and sanitize URLs before using urllib to open them to prevent SSRF attacks.",
-    "B311": "random is not cryptographically secure; use the secrets module for security-sensitive randomness.",
-    "B312": "telnetlib transmits data in plaintext; use paramiko or another SSH library instead.",
-    "B313": "Use defusedxml instead of xml.etree to prevent XML injection and entity expansion attacks.",
-    "B314": "Use defusedxml instead of xml.etree to prevent XML injection and entity expansion attacks.",
-    "B315": "Use defusedxml to parse XML and prevent entity expansion (XXE) attacks.",
-    "B316": "Use defusedxml to parse XML and prevent entity expansion (XXE) attacks.",
-    "B317": "Use defusedxml to parse XML and prevent entity expansion (XXE) attacks.",
-    "B318": "Use defusedxml to parse XML and prevent entity expansion (XXE) attacks.",
-    "B319": "Use defusedxml to parse XML and prevent entity expansion (XXE) attacks.",
-    "B320": "Use defusedxml to parse XML and prevent entity expansion (XXE) attacks.",
-    "B321": "FTP transmits credentials and data in plaintext; use SFTP or FTPS instead.",
-    "B322": "input() in Python 2 evaluates expressions; use raw_input() or migrate to Python 3.",
-    "B323": "Unverified SSL context disables certificate validation; always verify certificates in production.",
-    "B324": "MD5/SHA1 are weak; use hashlib.sha256 or stronger for any security-sensitive purpose.",
-    "B325": "mktemp() is insecure; use tempfile.mkstemp() instead.",
-    "B401": "Importing telnetlib; prefer SSH-based libraries like paramiko.",
-    "B402": "Importing ftplib; prefer SFTP or FTPS-capable libraries.",
-    "B403": "Importing pickle is a security risk if used with untrusted data; consider json or another safe format.",
-    "B404": "Importing subprocess; ensure shell=False and validate all inputs to avoid command injection.",
-    "B405": "Importing xml.etree; use defusedxml to prevent XXE and injection attacks.",
-    "B406": "Importing xml.sax; use defusedxml to prevent XXE and injection attacks.",
-    "B407": "Importing xml.expat; use defusedxml to prevent XXE and injection attacks.",
-    "B408": "Importing xml.dom; use defusedxml to prevent XXE and injection attacks.",
-    "B409": "Importing xml.etree.cElementTree; use defusedxml to prevent XXE and injection attacks.",
-    "B410": "Importing lxml; use defusedxml or enable lxml's security features explicitly.",
-    "B411": "xmlrpc is vulnerable to DoS attacks via large responses; consider REST APIs with proper rate limiting.",
-    "B412": "httpoxy vulnerability in CGI; ensure HTTP_PROXY is not used to set the outbound proxy.",
-    "B413": "pycrypto is unmaintained and has known vulnerabilities; use pycryptodome or cryptography instead.",
-    "B501": "SSL/TLS certificate verification is disabled; always verify certificates in production.",
-    "B502": "SSL v2 and v3 are deprecated and insecure; use TLSv1.2 or higher.",
-    "B503": "Using an insecure SSL/TLS protocol version; use TLSv1.2 or higher.",
-    "B504": "SSL context does not set a minimum TLS version; explicitly set minimum_version=TLSv1_2.",
-    "B505": "Weak RSA/DSA key size; use at least 2048-bit RSA or 256-bit EC keys.",
-    "B506": "yaml.load() with an arbitrary loader can execute arbitrary Python; use yaml.safe_load() instead.",
-    "B507": "Paramiko host key verification is disabled; always verify host keys to prevent MITM attacks.",
-    "B601": "Paramiko exec_command with shell interpolation risks command injection; validate and sanitize inputs.",
-    "B602": "subprocess with shell=True is vulnerable to shell injection; use shell=False with a list of arguments.",
-    "B603": "subprocess without shell=True; ensure all inputs are validated to prevent argument injection.",
-    "B604": "Function call with shell=True detected; prefer shell=False and pass arguments as a list.",
-    "B605": "Starting a process with os.system or partial path risks command injection; use subprocess with full paths.",
-    "B606": "Starting a process with no arguments detected; verify this is intentional.",
-    "B607": "Starting a process with a partial executable path; use the full absolute path to prevent PATH hijacking.",
-    "B608": "String-based SQL query construction risks SQL injection; use parameterized queries or an ORM.",
-    "B609": "Wildcard injection in Linux commands; avoid shell wildcards with untrusted input.",
-    "B610": "Django extra() with user-controlled data risks SQL injection; use ORM filters or RawSQL with params.",
-    "B611": "Django RawSQL with user-controlled data risks SQL injection; always pass params separately.",
-    "B701": "Jinja2 autoescape is disabled; enable it to prevent XSS vulnerabilities.",
-    "B702": "Use of Mako templates without escaping can lead to XSS; enable autoescape or escape manually.",
-    "B703": "Django mark_safe() bypasses XSS protection; ensure content is truly safe.",
+    "B303": "MD5 and SHA1 are cryptographically broken; use hashlib.sha256 or stronger.",
+    "B307": "eval() executes arbitrary code; avoid it or use safe literal parsing.",
+    "B602": "subprocess with shell=True is vulnerable to shell injection; use shell=False and argument lists.",
+    "B608": "String-built SQL can lead to injection; use parameterized queries.",
+    "SHELLCHECK_SC2086": "Double-quote variable expansions to prevent globbing and word splitting.",
+    "SHELLCHECK_SC2046": "Quote command substitutions to avoid word splitting issues.",
+    "SHELLCHECK_SC2164": "Check cd failures explicitly (or use strict mode and error handling).",
+    "JS_EVAL": "Avoid eval/new Function; use explicit parsing and bounded control flow.",
+    "JS_EXEC": "Avoid child_process.exec with user-influenced values; use execFile/spawn with validated args.",
+    "JS_WEAK_HASH": "Avoid MD5/SHA1 for security-sensitive logic; use modern primitives.",
+    "JS_HARDCODED_SECRET": "Do not hardcode secrets; load from environment or secure secret store.",
+    "PHP_EVAL": "Avoid eval in PHP; it can execute untrusted code paths.",
+    "PHP_EXEC": "Avoid shell/system execution unless strictly validated and sandboxed.",
+    "PHP_WEAK_HASH": "Avoid md5/sha1 for security-sensitive uses; use password_hash or stronger algorithms.",
+    "PHP_HARDCODED_SECRET": "Do not hardcode secrets in source code.",
+    "PY_EVAL": "Avoid eval/exec in Python code paths processing external input.",
+    "PY_WEAK_HASH": "Avoid MD5/SHA1 for security-sensitive hashing.",
+    "PY_SQL_STRING_BUILD": "Avoid building SQL with string concatenation; use parameterized queries.",
+    "PY_SHELL_TRUE": "Avoid subprocess shell=True; pass argument lists and keep shell=False.",
 }
+
+PYTHON_RULES = [
+    ("PY_EVAL", "HIGH", r"\b(eval|exec)\s*\("),
+    ("PY_SHELL_TRUE", "HIGH", r"subprocess\.(run|Popen|call|check_output)\([^\n]*shell\s*=\s*True"),
+    ("PY_WEAK_HASH", "MEDIUM", r"hashlib\.(md5|sha1)\s*\("),
+    ("PY_SQL_STRING_BUILD", "MEDIUM", r"(?i)\b(select|insert|update|delete)\b.*(%s|\+|\.format\()"),
+]
+
+JS_RULES = [
+    ("JS_EVAL", "HIGH", r"\beval\(|\bnew\s+Function\("),
+    (
+        "JS_EXEC",
+        "HIGH",
+        r"child_process\.(exec|execSync)\(|\brequire\(['\"]child_process['\"]\)\.exec|\bexec(Sync)?\s*\(",
+    ),
+    ("JS_WEAK_HASH", "MEDIUM", r"\b(md5|sha1)\b|createHash\(\s*['\"](md5|sha1)['\"]"),
+    (
+        "JS_HARDCODED_SECRET",
+        "MEDIUM",
+        r"(?i)(password|secret|token|api[_-]?key)\s*[:=]\s*['\"][^'\"]{6,}['\"]",
+    ),
+]
+
+PHP_RULES = [
+    ("PHP_EVAL", "HIGH", r"\beval\s*\("),
+    ("PHP_EXEC", "HIGH", r"\b(shell_exec|system|exec|passthru)\s*\("),
+    ("PHP_WEAK_HASH", "MEDIUM", r"\b(md5|sha1)\s*\("),
+    (
+        "PHP_HARDCODED_SECRET",
+        "MEDIUM",
+        r"(?i)(password|secret|token|api[_-]?key)\s*=>\s*['\"][^'\"]{6,}['\"]",
+    ),
+]
 
 
 def _make_error_result(reason: str) -> dict:
-    """Returns a standardised error result."""
-    return {"status": "error", "reason": reason, "issues": 0, "details": [], "mitigations": []}
+    return {
+        "status": "error",
+        "reason": reason,
+        "issues": 0,
+        "details": [],
+        "mitigations": [],
+        "engine": "none",
+    }
 
 
 def _make_skipped_result(reason: str) -> dict:
-    """Returns a standardised skipped result."""
-    return {"status": "skipped", "reason": reason, "issues": 0, "details": [], "mitigations": []}
+    return {
+        "status": "skipped",
+        "reason": reason,
+        "issues": 0,
+        "details": [],
+        "mitigations": [],
+        "engine": "none",
+    }
 
 
-def scan_python_code(
-    file_path: str,
-    min_severity: str = "LOW",
-    min_confidence: str = "LOW",
-    timeout: int = 60,
-) -> dict:
-    """
-    Scans a Python file for security issues using Bandit.
+def _normalized_language(language: str) -> str:
+    lang = language.lower().strip()
+    if lang in {"js", "node"}:
+        return "javascript"
+    if lang in {"sh", "shell"}:
+        return "bash"
+    return lang
 
-    Args:
-        file_path:      Path to the .py file to scan.
-        min_severity:   Minimum Bandit severity to include ('LOW', 'MEDIUM', 'HIGH').
-        min_confidence: Minimum Bandit confidence to include ('LOW', 'MEDIUM', 'HIGH').
-        timeout:        Seconds before the Bandit subprocess is killed.
 
-    Returns:
-        A dict with keys: status, issues, details, mitigations.
-        status is one of 'ok', 'error', or 'skipped'.
-    """
-    # --- input validation ---
-    path = Path(file_path)
-    if not path.exists():
-        logger.error("File does not exist: %s", file_path)
-        return _make_error_result(f"File does not exist: {file_path}")
-    if not path.is_file():
-        logger.error("Path is not a file: %s", file_path)
-        return _make_error_result(f"Path is not a file: {file_path}")
-    if path.suffix.lower() != ".py":
-        logger.error("Expected a .py file, got: %s", file_path)
-        return _make_error_result(f"Expected a .py file, got suffix '{path.suffix}'")
-
+def _severity_confidence_passes(
+    severity: str,
+    confidence: str,
+    min_severity: str,
+    min_confidence: str,
+) -> bool:
+    sev_rank = SEVERITY_RANK.get(severity.upper(), 0)
+    conf_rank = SEVERITY_RANK.get(confidence.upper(), 0)
     min_sev_rank = SEVERITY_RANK.get(min_severity.upper(), 1)
     min_conf_rank = SEVERITY_RANK.get(min_confidence.upper(), 1)
+    return sev_rank >= min_sev_rank and conf_rank >= min_conf_rank
 
-    # --- run bandit ---
+
+def _run_bandit(
+    file_path: str,
+    min_severity: str,
+    min_confidence: str,
+    timeout: int,
+) -> dict:
+    path = Path(file_path)
+    if not path.exists() or not path.is_file():
+        return _make_error_result(f"File does not exist: {file_path}")
+
     try:
         result = subprocess.run(
             [sys.executable, "-m", "bandit", "-f", "json", str(path)],
@@ -134,81 +130,261 @@ def scan_python_code(
             timeout=timeout,
         )
     except subprocess.TimeoutExpired:
-        logger.error("Bandit timed out after %ds for: %s", timeout, file_path)
         return _make_error_result(f"Bandit timed out after {timeout}s")
-    except FileNotFoundError:
-        logger.error("Bandit is not installed or not accessible via sys.executable.")
-        return _make_error_result("Bandit is not installed; run: pip install bandit")
     except Exception as exc:
-        logger.error("Unexpected error running Bandit on %s: %s", file_path, exc)
-        return _make_error_result(str(exc))
+        return _make_error_result(f"Bandit execution failed: {exc}")
 
-    # --- parse output ---
-    output = result.stdout.strip()
-    error_output = result.stderr.strip()
-
+    output = (result.stdout or "").strip()
     if not output:
-        if error_output:
-            logger.error("Bandit stderr for %s: %s", file_path, error_output)
-            return _make_error_result(f"Bandit produced no JSON output. stderr: {error_output[:200]}")
-        # Empty file or no statements to analyse — treat as clean
-        return {"status": "ok", "issues": 0, "details": [], "mitigations": []}
+        stderr_preview = (result.stderr or "").strip()
+        if "No module named bandit" in stderr_preview:
+            skipped = _make_skipped_result("Bandit module is not installed in the active Python environment.")
+            skipped["engine"] = "bandit"
+            return skipped
+        if stderr_preview:
+            return _make_error_result(f"Bandit produced no JSON output. stderr: {stderr_preview[:200]}")
+        return {"status": "ok", "issues": 0, "details": [], "mitigations": [], "engine": "bandit"}
 
     try:
-        data = json.loads(output)
+        parsed = json.loads(output)
     except json.JSONDecodeError as exc:
-        logger.error("Failed to parse Bandit JSON for %s: %s | raw: %.200s", file_path, exc, output)
-        return _make_error_result(f"Failed to parse Bandit output: {exc}")
+        return _make_error_result(f"Failed to parse Bandit JSON: {exc}")
 
-    # --- build results ---
-    findings = data.get("results", [])
     details = []
     mitigations = []
-
-    for finding in findings:
+    for finding in parsed.get("results", []):
         severity = finding.get("issue_severity", "LOW").upper()
         confidence = finding.get("issue_confidence", "LOW").upper()
-
-        if SEVERITY_RANK.get(severity, 0) < min_sev_rank:
-            continue
-        if SEVERITY_RANK.get(confidence, 0) < min_conf_rank:
+        if not _severity_confidence_passes(severity, confidence, min_severity, min_confidence):
             continue
 
         issue_id = finding.get("test_id", "UNKNOWN")
-        details.append({
-            "type": issue_id,
-            "severity": severity,
-            "confidence": confidence,
-            "line": finding.get("line_number"),
-            "description": finding.get("issue_text"),
-            "more_info": finding.get("more_info", ""),
-        })
-        mitigations.append({
-            "issue_id": issue_id,
-            "suggested_fix": MITIGATIONS.get(
-                issue_id,
-                f"No specific guidance available. "
-                f"See https://bandit.readthedocs.io/en/latest/plugins/{issue_id.lower()}.html",
-            ),
-        })
+        details.append(
+            {
+                "type": issue_id,
+                "severity": severity,
+                "confidence": confidence,
+                "line": finding.get("line_number"),
+                "description": finding.get("issue_text"),
+                "more_info": finding.get("more_info", ""),
+            }
+        )
+        mitigations.append(
+            {
+                "issue_id": issue_id,
+                "suggested_fix": MITIGATIONS.get(
+                    issue_id,
+                    f"Review guidance for {issue_id} and apply secure coding practices.",
+                ),
+            }
+        )
 
     return {
         "status": "ok",
         "issues": len(details),
         "details": details,
         "mitigations": mitigations,
+        "engine": "bandit",
     }
 
 
-def scan_js_code(file_path: str) -> dict:
-    """
-    Placeholder for JavaScript/Node.js security scanning.
+def _run_shellcheck(
+    file_path: str,
+    min_severity: str,
+    min_confidence: str,
+    timeout: int,
+) -> dict:
+    shellcheck_path = shutil.which("shellcheck")
+    if not shellcheck_path:
+        return _make_skipped_result("ShellCheck is not installed.")
 
-    JavaScript scanning is not yet implemented. Returns a 'skipped' result
-    so callers can distinguish this from a clean scan.
-    """
-    logger.warning("JS scanning is not implemented. Skipping: %s", file_path)
-    return _make_skipped_result("JavaScript scanning is not yet implemented.")
+    try:
+        result = subprocess.run(
+            [shellcheck_path, "-f", "json", file_path],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return _make_error_result(f"ShellCheck timed out after {timeout}s")
+    except Exception as exc:
+        return _make_error_result(f"ShellCheck execution failed: {exc}")
+
+    output = (result.stdout or "").strip()
+    if not output:
+        return {
+            "status": "ok",
+            "issues": 0,
+            "details": [],
+            "mitigations": [],
+            "engine": "shellcheck",
+        }
+
+    try:
+        findings = json.loads(output)
+    except json.JSONDecodeError as exc:
+        return _make_error_result(f"Failed to parse ShellCheck JSON: {exc}")
+
+    details = []
+    mitigations = []
+    for finding in findings:
+        code = str(finding.get("code", ""))
+        issue_id = f"SHELLCHECK_SC{code}" if code else "SHELLCHECK_UNKNOWN"
+        severity = "MEDIUM"
+        confidence = "MEDIUM"
+        if not _severity_confidence_passes(severity, confidence, min_severity, min_confidence):
+            continue
+        details.append(
+            {
+                "type": issue_id,
+                "severity": severity,
+                "confidence": confidence,
+                "line": finding.get("line"),
+                "description": finding.get("message", "ShellCheck finding"),
+                "more_info": finding.get("level", "style"),
+            }
+        )
+        mitigations.append(
+            {
+                "issue_id": issue_id,
+                "suggested_fix": MITIGATIONS.get(
+                    issue_id,
+                    "Apply ShellCheck recommendation and enforce strict shell safety patterns.",
+                ),
+            }
+        )
+
+    return {
+        "status": "ok",
+        "issues": len(details),
+        "details": details,
+        "mitigations": mitigations,
+        "engine": "shellcheck",
+    }
+
+
+def _run_regex_security_rules(
+    file_path: str,
+    rules: list[tuple[str, str, str]],
+    min_severity: str,
+    min_confidence: str,
+    engine_name: str,
+) -> dict:
+    path = Path(file_path)
+    if not path.exists() or not path.is_file():
+        return _make_error_result(f"File does not exist: {file_path}")
+
+    source = path.read_text(encoding="utf-8", errors="ignore")
+    lines = source.splitlines()
+
+    details = []
+    mitigations = []
+    for issue_id, severity, pattern in rules:
+        if not _severity_confidence_passes(severity, "MEDIUM", min_severity, min_confidence):
+            continue
+        regex = re.compile(pattern)
+        for idx, line in enumerate(lines, start=1):
+            if regex.search(line):
+                details.append(
+                    {
+                        "type": issue_id,
+                        "severity": severity,
+                        "confidence": "MEDIUM",
+                        "line": idx,
+                        "description": f"Potential insecure pattern matched: {issue_id}",
+                        "more_info": line.strip()[:240],
+                    }
+                )
+                mitigations.append(
+                    {
+                        "issue_id": issue_id,
+                        "suggested_fix": MITIGATIONS.get(issue_id, "Refactor to a safer language construct."),
+                    }
+                )
+
+    return {
+        "status": "ok",
+        "issues": len(details),
+        "details": details,
+        "mitigations": mitigations,
+        "engine": engine_name,
+    }
+
+
+def _run_semgrep(
+    file_path: str,
+    min_severity: str,
+    min_confidence: str,
+    timeout: int,
+) -> dict:
+    semgrep_path = shutil.which("semgrep")
+    if not semgrep_path:
+        return _make_skipped_result("Semgrep is not installed.")
+
+    try:
+        result = subprocess.run(
+            [
+                semgrep_path,
+                "--quiet",
+                "--json",
+                "--config",
+                "p/security-audit",
+                file_path,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return _make_error_result(f"Semgrep timed out after {timeout}s")
+    except Exception as exc:
+        return _make_error_result(f"Semgrep execution failed: {exc}")
+
+    output = (result.stdout or "").strip()
+    if not output:
+        stderr_preview = (result.stderr or "").strip()
+        if stderr_preview:
+            return _make_error_result(f"Semgrep produced no JSON output. stderr: {stderr_preview[:200]}")
+        return {"status": "ok", "issues": 0, "details": [], "mitigations": [], "engine": "semgrep"}
+
+    try:
+        parsed = json.loads(output)
+    except json.JSONDecodeError as exc:
+        return _make_error_result(f"Failed to parse Semgrep JSON: {exc}")
+
+    details = []
+    mitigations = []
+    for finding in parsed.get("results", []):
+        extra = finding.get("extra", {})
+        issue_id = finding.get("check_id", "SEMGREP_UNKNOWN")
+        severity = str(extra.get("severity", "MEDIUM")).upper()
+        confidence = "MEDIUM"
+        if not _severity_confidence_passes(severity, confidence, min_severity, min_confidence):
+            continue
+        details.append(
+            {
+                "type": issue_id,
+                "severity": severity,
+                "confidence": confidence,
+                "line": (finding.get("start") or {}).get("line"),
+                "description": extra.get("message", "Semgrep finding"),
+                "more_info": extra.get("metadata", {}).get("shortlink", ""),
+            }
+        )
+        mitigations.append(
+            {
+                "issue_id": issue_id,
+                "suggested_fix": "Apply Semgrep recommendation and refactor toward secure APIs and validated inputs.",
+            }
+        )
+
+    return {
+        "status": "ok",
+        "issues": len(details),
+        "details": details,
+        "mitigations": mitigations,
+        "engine": "semgrep",
+    }
 
 
 def get_security_analysis(
@@ -218,29 +394,87 @@ def get_security_analysis(
     min_confidence: str = "LOW",
     timeout: int = 60,
 ) -> dict:
-    """
-    Dispatches a security scan based on the given language.
+    lang = _normalized_language(language)
 
-    Args:
-        language:       Source language ('python', 'javascript', 'js', 'node').
-        file_path:      Path to the source file.
-        min_severity:   Minimum Bandit severity to report ('LOW', 'MEDIUM', 'HIGH').
-        min_confidence: Minimum Bandit confidence to report ('LOW', 'MEDIUM', 'HIGH').
-        timeout:        Seconds before the scanner subprocess is killed.
-
-    Returns:
-        A dict with keys: status, issues, details, mitigations.
-    """
-    lang = language.lower().strip()
     if lang == "python":
-        return scan_python_code(
-            file_path,
+        bandit_res = _run_bandit(
+            file_path=file_path,
             min_severity=min_severity,
             min_confidence=min_confidence,
             timeout=timeout,
         )
-    if lang in {"javascript", "js", "node"}:
-        return scan_js_code(file_path)
+        if bandit_res["status"] in {"ok", "error"}:
+            return bandit_res
+
+        return _run_regex_security_rules(
+            file_path=file_path,
+            rules=PYTHON_RULES,
+            min_severity=min_severity,
+            min_confidence=min_confidence,
+            engine_name="regex-python-fallback",
+        )
+
+    if lang == "bash":
+        shellcheck_res = _run_shellcheck(
+            file_path=file_path,
+            min_severity=min_severity,
+            min_confidence=min_confidence,
+            timeout=timeout,
+        )
+        if shellcheck_res["status"] in {"ok", "error"}:
+            return shellcheck_res
+
+        regex_res = _run_regex_security_rules(
+            file_path=file_path,
+            rules=[
+                ("SHELLCHECK_SC2086", "MEDIUM", r"\$[A-Za-z_][A-Za-z0-9_]*"),
+                ("SHELLCHECK_SC2046", "MEDIUM", r"\$\([^)]+\)"),
+                ("SHELLCHECK_SC2164", "MEDIUM", r"\bcd\s+[^;&|]+$"),
+            ],
+            min_severity=min_severity,
+            min_confidence=min_confidence,
+            engine_name="regex-shell-fallback",
+        )
+        if regex_res["issues"] == 0:
+            regex_res["status"] = "skipped"
+            regex_res["reason"] = "ShellCheck unavailable and fallback found no actionable issues."
+        return regex_res
+
+    if lang == "javascript":
+        semgrep_res = _run_semgrep(
+            file_path=file_path,
+            min_severity=min_severity,
+            min_confidence=min_confidence,
+            timeout=timeout,
+        )
+        if semgrep_res["status"] in {"ok", "error"}:
+            return semgrep_res
+
+        return _run_regex_security_rules(
+            file_path=file_path,
+            rules=JS_RULES,
+            min_severity=min_severity,
+            min_confidence=min_confidence,
+            engine_name="regex-js-rules",
+        )
+
+    if lang == "php":
+        semgrep_res = _run_semgrep(
+            file_path=file_path,
+            min_severity=min_severity,
+            min_confidence=min_confidence,
+            timeout=timeout,
+        )
+        if semgrep_res["status"] in {"ok", "error"}:
+            return semgrep_res
+
+        return _run_regex_security_rules(
+            file_path=file_path,
+            rules=PHP_RULES,
+            min_severity=min_severity,
+            min_confidence=min_confidence,
+            engine_name="regex-php-rules",
+        )
 
     logger.warning("Unsupported language '%s' for file: %s", language, file_path)
     return _make_skipped_result(f"Unsupported language: '{language}'")

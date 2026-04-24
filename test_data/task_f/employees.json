@@ -1,0 +1,38 @@
+[
+  {
+    "id": 1,
+    "name": "Alice Johnson",
+    "department": "Engineering",
+    "salary": 125000
+  },
+  {
+    "id": 2,
+    "name": "Bob Smith",
+    "department": "Sales",
+    "salary": 88000
+  },
+  {
+    "id": 3,
+    "name": "Charlie Brown",
+    "department": "Engineering",
+    "salary": 98000
+  },
+  {
+    "id": 4,
+    "name": "Diana Prince",
+    "department": "HR",
+    "salary": 91000
+  },
+  {
+    "id": 5,
+    "name": "Eve Wilson",
+    "department": "Security",
+    "salary": 118000
+  },
+  {
+    "id": 6,
+    "name": "Frank Lee",
+    "department": "Security",
+    "salary": 94000
+  }
+]

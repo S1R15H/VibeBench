@@ -1,0 +1,7 @@
+{
+  "username": "testuser",
+  "password": "SecureP@ssw0rd!",
+  "wrong_password": "InsecurePass123",
+  "salt_hex": "2f4c6a8b0d1e3f50718293a4b5c6d7e8",
+  "iterations": 120000
+}

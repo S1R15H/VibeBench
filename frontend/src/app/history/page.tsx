@@ -2,22 +2,32 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
+import { apiUrl } from "../../lib/api";
+
+type BenchmarkResult = {
+  id: number;
+  ai_model: string;
+  model_id?: string;
+  task_id: string;
+  compile_status: string;
+  functional_correctness: number;
+  security_issues: number;
+  readability_score: number;
+  code?: string;
+  execution_output?: string | Record<string, unknown>;
+};
 
 export default function HistoryPage() {
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<BenchmarkResult[]>([]);
   const [status, setStatus] = useState("Loading history...");
 
-  useEffect(() => {
-    fetchResults();
-  }, []);
-
-  const fetchResults = async () => {
+  async function fetchResults() {
     try {
-      const response = await fetch("http://localhost:8000/api/results");
+      const response = await fetch(apiUrl("/api/results"));
       if (response.ok) {
-        const data = await response.json();
+        const data: BenchmarkResult[] = await response.json();
         setResults(data);
-        setStatus("History loaded.");
+        setStatus("Database connected.");
       } else {
         setStatus("Failed to load history.");
       }
@@ -25,7 +35,12 @@ export default function HistoryPage() {
       console.error("Failed to fetch results", e);
       setStatus("Backend connection error.");
     }
-  };
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchResults();
+  }, []);
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 font-sans p-8">
@@ -41,8 +56,16 @@ export default function HistoryPage() {
               </p>
             </div>
 
-            <div className="text-sm px-4 py-2 rounded-lg bg-neutral-950 border border-neutral-800 text-neutral-400">
-              {status}
+            <div className="flex items-center space-x-4">
+              <a
+                href={apiUrl("/api/export/csv")}
+                className="text-sm px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition"
+              >
+                Export CSV
+              </a>
+              <div className="text-sm px-4 py-2 rounded-lg bg-neutral-950 border border-neutral-800 text-neutral-400">
+                {status}
+              </div>
             </div>
           </div>
 
@@ -65,6 +88,8 @@ export default function HistoryPage() {
                     <th className="px-5 py-4 font-semibold text-center">Correct</th>
                     <th className="px-5 py-4 font-semibold text-center">Issues</th>
                     <th className="px-5 py-4 font-semibold text-center">Readability</th>
+                    <th className="px-5 py-4 font-semibold">Code</th>
+                    <th className="px-5 py-4 font-semibold">Output</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-800/50">
@@ -98,7 +123,7 @@ export default function HistoryPage() {
                       </td>
                       <td className="px-5 py-4 text-center">
                         <span
-                          className={`inline-flex items-center justify-center h-6 min-w-[1.5rem] rounded-full px-2 text-xs font-bold ${
+                          className={`inline-flex items-center justify-center h-6 min-w-6 rounded-full px-2 text-xs font-bold ${
                             r.security_issues > 0
                               ? "bg-red-500/10 text-red-400"
                               : "bg-green-500/10 text-green-400"
@@ -109,6 +134,24 @@ export default function HistoryPage() {
                       </td>
                       <td className="px-5 py-4 text-center font-mono text-xs text-neutral-400">
                         {r.readability_score > 0 ? r.readability_score : "-"}
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <details className="group">
+                          <summary className="cursor-pointer list-none text-indigo-300 hover:text-indigo-200">View</summary>
+                          <pre className="mt-3 max-w-md overflow-auto whitespace-pre-wrap wrap-break-word rounded-lg bg-black/40 p-3 text-[11px] leading-relaxed text-emerald-200 font-mono">
+                            {r.code || "No code stored."}
+                          </pre>
+                        </details>
+                      </td>
+                      <td className="px-5 py-4 align-top">
+                        <details className="group">
+                          <summary className="cursor-pointer list-none text-indigo-300 hover:text-indigo-200">View</summary>
+                          <pre className="mt-3 max-w-md overflow-auto whitespace-pre-wrap wrap-break-word rounded-lg bg-black/40 p-3 text-[11px] leading-relaxed text-neutral-200 font-mono">
+                            {typeof r.execution_output === "string" 
+                              ? r.execution_output 
+                              : JSON.stringify(r.execution_output || {}, null, 2)}
+                          </pre>
+                        </details>
                       </td>
                     </tr>
                   ))}

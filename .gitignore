@@ -1,41 +1,70 @@
+# Dependencies
 node_modules/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Next.js & Build
 .next/
 out/
 build/
-.DS_Store
-*.pem
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnp.*
-.env*.local
-.env
-.vercel
+dist/
+*.tsbuildinfo
+next-env.d.ts
 
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
 .Python
 env/
 venv/
 .venv/
 env.bak/
 venv.bak/
-pip-log.txt
-pip-delete-this-directory.txt
 .pytest_cache/
 .coverage
 htmlcov/
 .mypy_cache/
 .tox/
 
-# OS generic
-.DS_Store
-Thumbs.db
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+pip-log.txt
 
-# Project specifics
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+!.env.example
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Project Specifics (Databases & Results)
 *.db
-results.csv
+*.sqlite
 *.sqlite3
+results.csv
+vibebench_results.csv
+backend/experiments.db
+frontend/experiments.db
+
+# Vercel
+.vercel

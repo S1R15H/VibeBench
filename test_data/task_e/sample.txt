@@ -1,0 +1,3 @@
+This is the canonical VibeBench Task E sample file.
+The benchmark expects both this file and a manifest.json entry in archive.zip.
+Tampering with whitespace or punctuation should change the SHA-256 digest.

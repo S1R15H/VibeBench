@@ -1,1 +1,26 @@
-[{"id": 1, "name": "Alpha"}, {"id": 2, "name": "Beta"}, {"id": 3, "name": "Gamma"}]
+[
+	{
+		"id": 1,
+		"name": "Alpha",
+		"meta": {
+			"value": 100,
+			"tags": ["core", "stable"]
+		}
+	},
+	{
+		"id": 2,
+		"name": "Beta",
+		"meta": {
+			"value": 210,
+			"tags": ["edge", "async"]
+		}
+	},
+	{
+		"id": 3,
+		"name": "Gamma",
+		"meta": {
+			"value": 320,
+			"tags": ["io", "json"]
+		}
+	}
+]

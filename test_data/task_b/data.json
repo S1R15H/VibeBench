@@ -2,26 +2,46 @@
     {
         "id": 1,
         "name": "Alpha",
-        "value": 100
+        "value": 100,
+        "meta": {
+            "priority": "high",
+            "tags": ["core", "stable"]
+        }
     },
     {
         "id": 2,
         "name": "Beta",
-        "value": 200
+        "value": 210,
+        "meta": {
+            "priority": "medium",
+            "tags": ["edge", "async"]
+        }
     },
     {
         "id": 3,
         "name": "Gamma",
-        "value": 300
+        "value": 320,
+        "meta": {
+            "priority": "low",
+            "tags": ["io", "json"]
+        }
     },
     {
         "id": 4,
         "name": "Delta",
-        "value": 400
+        "value": 430,
+        "meta": {
+            "priority": "high",
+            "tags": ["threaded", "parser"]
+        }
     },
     {
         "id": 5,
         "name": "Epsilon",
-        "value": 500
+        "value": 540,
+        "meta": {
+            "priority": "critical",
+            "tags": ["validation", "benchmark"]
+        }
     }
 ]

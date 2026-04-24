@@ -1,0 +1,57 @@
+[
+  {
+    "_id": 1,
+    "name": "Laptop Pro",
+    "category": "Electronics",
+    "price": 1499.99,
+    "stock": {
+      "warehouse": 14,
+      "retail": 3
+    },
+    "tags": ["featured", "premium"]
+  },
+  {
+    "_id": 2,
+    "name": "Wireless Mouse",
+    "category": "Accessories",
+    "price": 39.5,
+    "stock": {
+      "warehouse": 120,
+      "retail": 42
+    },
+    "tags": ["office"]
+  },
+  {
+    "_id": 3,
+    "name": "4K Monitor",
+    "category": "Electronics",
+    "price": 499.0,
+    "stock": {
+      "warehouse": 9,
+      "retail": 7
+    },
+    "tags": ["featured", "display"]
+  },
+  {
+    "_id": 4,
+    "name": "Noise-Cancel Headphones",
+    "category": "Electronics",
+    "price": 299.9,
+    "stock": {
+      "warehouse": 31,
+      "retail": 11
+    },
+    "tags": ["featured", "audio"]
+  },
+  {
+    "_id": 5,
+    "name": "Mechanical Keyboard",
+    "category": "Accessories",
+    "price": 129.75,
+    "stock": {
+      "warehouse": 52,
+      "retail": 14
+    },
+    "tags": ["featured", "office"]
+  }
+]

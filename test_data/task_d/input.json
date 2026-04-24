@@ -1,0 +1,40 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "user": "alice",
+      "action": "login",
+      "latency_ms": 120
+    },
+    {
+      "id": 2,
+      "user": "bob",
+      "action": "search",
+      "latency_ms": 380
+    },
+    {
+      "id": 3,
+      "user": "alice",
+      "action": "checkout",
+      "latency_ms": 260
+    },
+    {
+      "id": 4,
+      "user": "carol",
+      "action": "search",
+      "latency_ms": 140
+    },
+    {
+      "id": 5,
+      "user": "dave",
+      "action": "login",
+      "latency_ms": 310
+    },
+    {
+      "id": 6,
+      "user": "bob",
+      "action": "checkout",
+      "latency_ms": 450
+    }
+  ]
+}
