@@ -71,7 +71,7 @@ export default function RunPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [status, setStatus] = useState("Ready to benchmark.");
   const [latestResult, setLatestResult] = useState<BenchmarkResult | null>(null);
-  const [expectedOutput, setExpectedOutput] = useState<any>(null);
+  const [expectedOutput, setExpectedOutput] = useState<Record<string, unknown> | null>(null);
   const [generatedCode, setGeneratedCode] = useState("Generated code will appear here after a run.");
   const [executionOutput, setExecutionOutput] = useState("Structured execution output will appear here after a run.");
 
@@ -79,7 +79,7 @@ export default function RunPage() {
     const fetchExpected = async () => {
       try {
         const res = await fetch(apiUrl(`/api/tasks/${selectedTask}/expected`));
-        const data = await res.json();
+        const data: Record<string, unknown> = await res.json();
         setExpectedOutput(data);
       } catch (error) {
         console.error("Failed to fetch expected output:", error);

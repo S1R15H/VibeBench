@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "../components/Navbar";
 import { apiUrl } from "../../lib/api";
 
@@ -17,9 +17,128 @@ type BenchmarkResult = {
   execution_output?: string | Record<string, unknown>;
 };
 
+type MetricTotals = {
+  sum: number;
+  count: number;
+};
+
+type ModelAggregates = {
+  readability: MetricTotals;
+  security: MetricTotals;
+  correctness: MetricTotals;
+};
+
+type ModelAverages = {
+  model: string;
+  readability: number;
+  security: number;
+  correctness: number;
+};
+
 export default function HistoryPage() {
   const [results, setResults] = useState<BenchmarkResult[]>([]);
   const [status, setStatus] = useState("Loading history...");
+
+  const modelAverages = useMemo<ModelAverages[]>(() => {
+    const byModel = new Map<string, ModelAggregates>();
+
+    for (const run of results) {
+      const modelKey = run.ai_model || "Unknown model";
+      const aggregates =
+        byModel.get(modelKey) || {
+          readability: { sum: 0, count: 0 },
+          security: { sum: 0, count: 0 },
+          correctness: { sum: 0, count: 0 },
+        };
+
+      if (run.readability_score > 0) {
+        aggregates.readability.sum += run.readability_score;
+        aggregates.readability.count += 1;
+      }
+
+      if (run.security_issues > 0) {
+        aggregates.security.sum += run.security_issues;
+        aggregates.security.count += 1;
+      }
+
+      if (run.functional_correctness > 0) {
+        aggregates.correctness.sum += run.functional_correctness;
+        aggregates.correctness.count += 1;
+      }
+
+      byModel.set(modelKey, aggregates);
+    }
+
+    return Array.from(byModel.entries())
+      .map(([model, aggregates]) => ({
+        model,
+        readability:
+          aggregates.readability.count > 0
+            ? aggregates.readability.sum / aggregates.readability.count
+            : 0,
+        security:
+          aggregates.security.count > 0 ? aggregates.security.sum / aggregates.security.count : 0,
+        correctness:
+          aggregates.correctness.count > 0
+            ? aggregates.correctness.sum / aggregates.correctness.count
+            : 0,
+      }))
+      .sort((a, b) => a.model.localeCompare(b.model));
+  }, [results]);
+
+  const metricMax = useMemo(() => {
+    const readability = modelAverages.reduce((max, item) => Math.max(max, item.readability), 0);
+    const security = modelAverages.reduce((max, item) => Math.max(max, item.security), 0);
+    const correctness = modelAverages.reduce((max, item) => Math.max(max, item.correctness), 0);
+
+    return {
+      readability: readability > 0 ? readability : 1,
+      security: security > 0 ? security : 1,
+      correctness: correctness > 0 ? correctness : 1,
+    };
+  }, [modelAverages]);
+
+  function renderMetricBars(
+    title: string,
+    metric: keyof Pick<ModelAverages, "readability" | "security" | "correctness">,
+    maxValue: number,
+    colorClass: string,
+    formatValue: (value: number) => string
+  ) {
+    const hasValues = modelAverages.some((item) => item[metric] > 0);
+
+    return (
+      <section className="rounded-xl border border-neutral-800 bg-neutral-950/60 p-4">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-300">{title}</h3>
+        <div className="mt-4 space-y-3">
+          {!hasValues ? (
+            <p className="text-sm text-neutral-500">No non-zero values available for this metric yet.</p>
+          ) : (
+            modelAverages.map((item) => {
+              const value = item[metric];
+              const width = value > 0 ? Math.min((value / maxValue) * 100, 100) : 0;
+
+              return (
+                <div key={`${title}-${item.model}`} className="space-y-1">
+                  <div className="flex items-center justify-between gap-4 text-xs">
+                    <span className="truncate text-neutral-300">{item.model}</span>
+                    <span className="font-mono text-neutral-400">{formatValue(value)}</span>
+                  </div>
+                  <div className="h-2 rounded bg-neutral-800">
+                    <div
+                      className={`h-2 rounded ${colorClass}`}
+                      style={{ width: `${width}%` }}
+                      aria-hidden="true"
+                    />
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </section>
+    );
+  }
 
   async function fetchResults() {
     try {
@@ -48,6 +167,38 @@ export default function HistoryPage() {
         <Navbar active="history" />
 
         <div className="bg-neutral-900 shadow-xl rounded-2xl p-6 border border-neutral-800">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold">Model Average Metrics</h2>
+            <p className="text-neutral-400 mt-2">
+              Bar graphs by model using non-zero values only for average readability, security, and correctness.
+            </p>
+          </div>
+
+          <div className="mb-8 grid grid-cols-1 xl:grid-cols-3 gap-4">
+            {renderMetricBars(
+              "Average Readability",
+              "readability",
+              metricMax.readability,
+              "bg-emerald-500",
+              (value) => (value > 0 ? value.toFixed(2) : "-")
+            )}
+            {renderMetricBars(
+              "Average Security Issues",
+              "security",
+              metricMax.security,
+              "bg-rose-500",
+              (value) => (value > 0 ? value.toFixed(2) : "-")
+            )}
+            {renderMetricBars(
+              "Average Correctness",
+              "correctness",
+              metricMax.correctness,
+              "bg-sky-500",
+              (value) => (value > 0 ? `${(value * 100).toFixed(1)}%` : "-")
+            )}
+          </div>
+
+          <div className="border-t border-neutral-800 pt-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-2xl font-bold">Results History</h2>
@@ -158,6 +309,7 @@ export default function HistoryPage() {
                 </tbody>
               </table>
             )}
+          </div>
           </div>
         </div>
       </div>

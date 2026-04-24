@@ -1,26 +1,8 @@
-[
-	{
-		"id": 1,
-		"name": "Alpha",
-		"meta": {
-			"value": 100,
-			"tags": ["core", "stable"]
-		}
-	},
-	{
-		"id": 2,
-		"name": "Beta",
-		"meta": {
-			"value": 210,
-			"tags": ["edge", "async"]
-		}
-	},
-	{
-		"id": 3,
-		"name": "Gamma",
-		"meta": {
-			"value": 320,
-			"tags": ["io", "json"]
-		}
-	}
-]
+{
+  "task": "event_analytics",
+  "event_count": 1,
+  "users": [],
+  "actions": {},
+  "slow_event_ids": [],
+  "checksum": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+}
