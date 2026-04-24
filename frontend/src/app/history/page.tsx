@@ -10,9 +10,10 @@ type BenchmarkResult = {
   model_id?: string;
   task_id: string;
   compile_status: string;
-  functional_correctness: number;
-  security_issues: number;
-  readability_score: number;
+  functional_correctness: number | null;
+  security_issues: number | null;
+  security_details?: string | Array<{ severity?: string }> | null;
+  readability_score: number | null;
   code?: string;
   execution_output?: string | Record<string, unknown>;
 };
@@ -35,6 +36,45 @@ type ModelAverages = {
   correctness: number;
 };
 
+function isFiniteMetric(value: number | null | undefined): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function parseSecurityDetails(details: BenchmarkResult["security_details"]): Array<{ severity?: string }> {
+  if (Array.isArray(details)) {
+    return details;
+  }
+
+  if (typeof details === "string" && details.trim().length > 0) {
+    try {
+      const parsed = JSON.parse(details);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function calculateSecurityScore(details: BenchmarkResult["security_details"]): number {
+  const issues = parseSecurityDetails(details);
+  let penalty = 0;
+
+  for (const issue of issues) {
+    const severity = String(issue?.severity ?? "LOW").toUpperCase();
+    if (severity === "HIGH") {
+      penalty += 5;
+    } else if (severity === "MEDIUM") {
+      penalty += 2;
+    } else {
+      penalty += 1;
+    }
+  }
+
+  return Math.max(0, 10 - penalty);
+}
+
 export default function HistoryPage() {
   const [results, setResults] = useState<BenchmarkResult[]>([]);
   const [status, setStatus] = useState("Loading history...");
@@ -51,17 +91,16 @@ export default function HistoryPage() {
           correctness: { sum: 0, count: 0 },
         };
 
-      if (run.readability_score > 0) {
+      if (isFiniteMetric(run.readability_score)) {
         aggregates.readability.sum += run.readability_score;
         aggregates.readability.count += 1;
       }
 
-      if (run.security_issues > 0) {
-        aggregates.security.sum += run.security_issues;
-        aggregates.security.count += 1;
-      }
+      const securityScore = calculateSecurityScore(run.security_details);
+      aggregates.security.sum += securityScore;
+      aggregates.security.count += 1;
 
-      if (run.functional_correctness > 0) {
+      if (isFiniteMetric(run.functional_correctness)) {
         aggregates.correctness.sum += run.functional_correctness;
         aggregates.correctness.count += 1;
       }
@@ -88,7 +127,7 @@ export default function HistoryPage() {
 
   const metricMax = useMemo(() => {
     const readability = modelAverages.reduce((max, item) => Math.max(max, item.readability), 0);
-    const security = modelAverages.reduce((max, item) => Math.max(max, item.security), 0);
+    const security = 10;
     const correctness = modelAverages.reduce((max, item) => Math.max(max, item.correctness), 0);
 
     return {
@@ -105,18 +144,18 @@ export default function HistoryPage() {
     colorClass: string,
     formatValue: (value: number) => string
   ) {
-    const hasValues = modelAverages.some((item) => item[metric] > 0);
+    const hasValues = modelAverages.length > 0;
 
     return (
       <section className="rounded-xl border border-neutral-800 bg-neutral-950/60 p-4">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-neutral-300">{title}</h3>
         <div className="mt-4 space-y-3">
           {!hasValues ? (
-            <p className="text-sm text-neutral-500">No non-zero values available for this metric yet.</p>
+            <p className="text-sm text-neutral-500">No values available for this metric yet.</p>
           ) : (
             modelAverages.map((item) => {
               const value = item[metric];
-              const width = value > 0 ? Math.min((value / maxValue) * 100, 100) : 0;
+              const width = Math.max(0, Math.min((value / maxValue) * 100, 100));
 
               return (
                 <div key={`${title}-${item.model}`} className="space-y-1">
@@ -170,7 +209,7 @@ export default function HistoryPage() {
           <div className="mb-6">
             <h2 className="text-2xl font-bold">Model Average Metrics</h2>
             <p className="text-neutral-400 mt-2">
-              Bar graphs by model using non-zero values only for average readability, security, and correctness.
+              Bar graphs by model for average readability, average security score, and average correctness including zero values.
             </p>
           </div>
 
@@ -180,21 +219,21 @@ export default function HistoryPage() {
               "readability",
               metricMax.readability,
               "bg-emerald-500",
-              (value) => (value > 0 ? value.toFixed(2) : "-")
+              (value) => value.toFixed(2)
             )}
             {renderMetricBars(
-              "Average Security Issues",
+              "Average Security Score",
               "security",
               metricMax.security,
               "bg-rose-500",
-              (value) => (value > 0 ? value.toFixed(2) : "-")
+              (value) => `${value.toFixed(2)} / 10`
             )}
             {renderMetricBars(
               "Average Correctness",
               "correctness",
               metricMax.correctness,
               "bg-sky-500",
-              (value) => (value > 0 ? `${(value * 100).toFixed(1)}%` : "-")
+              (value) => `${(value * 100).toFixed(1)}%`
             )}
           </div>
 
@@ -275,16 +314,16 @@ export default function HistoryPage() {
                       <td className="px-5 py-4 text-center">
                         <span
                           className={`inline-flex items-center justify-center h-6 min-w-6 rounded-full px-2 text-xs font-bold ${
-                            r.security_issues > 0
+                            (r.security_issues ?? 0) > 0
                               ? "bg-red-500/10 text-red-400"
                               : "bg-green-500/10 text-green-400"
                           }`}
                         >
-                          {r.security_issues}
+                          {r.security_issues ?? 0}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-center font-mono text-xs text-neutral-400">
-                        {r.readability_score > 0 ? r.readability_score : "-"}
+                        {isFiniteMetric(r.readability_score) ? r.readability_score : "-"}
                       </td>
                       <td className="px-5 py-4 align-top">
                         <details className="group">

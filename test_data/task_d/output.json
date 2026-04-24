@@ -1,8 +1,12 @@
 {
-  "task": "event_analytics",
-  "event_count": 1,
-  "users": [],
-  "actions": {},
-  "slow_event_ids": [],
-  "checksum": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+    "task": "event_analytics",
+    "event_count": 6,
+    "users": [
+        "unknown"
+    ],
+    "actions": [
+        "unknown"
+    ],
+    "slow_event_ids": [],
+    "checksum": "8de19646554f7d5646e6b1bed9d8d9dff8fa93e2e9ea7c82fd3c2a704d58b40d"
 }
